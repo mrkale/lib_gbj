@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="library" version="3.7" method="upgrade">
+    <name>LIB_GBJ</name>
+    <libraryname>gbj</libraryname>
+    <description>LIB_GBJ_XML_DESCRIPTION</description>
+    <creationDate>2017-07-28</creationDate>
+    <author>Libor Gabaj</author>
+    <authorEmail>libor.gabaj@gmail.com</authorEmail>
+    <authorUrl>n/a</authorUrl>
+    <copyright>(C)2017 Libor Gabaj</copyright>
+    <license>GNU GPLv2 or later</license>
+    <version>1.0.0</version>
+    <packager>Libor Gabaj</packager>
+    <packagerurl></packagerurl>
+
+    <files folder="gbj">
+        <folder>forms</folder>
+        <folder>helpers</folder>
+        <folder>layouts</folder>
+        <folder>seed</folder>
+        <folder>templates</folder>
+        <file>LICENSE.txt</file>
+        <file>html.php</file>
+    </files>
+
+    <languages folder="language">
+        <language tag="en-GB">en-GB/en-GB.lib_gbj.ini</language>
+        <language tag="en-GB">en-GB/en-GB.lib_gbj.sys.ini</language>
+        <language tag="sk-SK">sk-SK/sk-SK.lib_gbj.ini</language>
+        <language tag="sk-SK">sk-SK/sk-SK.lib_gbj.sys.ini</language>
+    </languages>
+</extension>

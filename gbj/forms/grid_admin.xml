@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+@package    Joomla.Library
+@copyright   (c) 2017 Libor Gabaj. All rights reserved.
+@license    GNU General Public License version 2 or later. See LICENSE.txt, LICENSE.php.
+@since      3.6
+-->
+<form>
+    <fieldset name="gridfields">
+
+        <field
+            name="description"
+            type="string"
+            label="JGLOBAL_DESCRIPTION"
+        />
+
+        <field
+            name="sequence"
+            type="checkbox"
+            searchable="false"
+            label="JGLOBAL_CHECK_ALL"
+            labelclass="hidden-phone"
+            class="center hidden-phone"
+            width="1%"
+            sorted="false"
+        />
+
+        <field
+            name="state"
+            type="button-published"
+            searchable="false"
+            label="JSTATUS"
+            labelclass="nowrap center"
+            class="center"
+            width="1%"
+        />
+
+        <field
+            name="featured"
+            type="button-featured"
+            label="JFEATURED"
+            labelclass="nowrap center hidden-phone"
+            class="center hidden-phone"
+            width="1%"
+        />
+
+        <field
+            name="modified"
+            type="date"
+            label="JGLOBAL_MODIFIED_DATE"
+            labelclass="hidden-phone"
+            class="hidden-phone"
+            width="10%"
+            format="LIB_GBJ_FORMAT_TIMESTAMP"
+        />
+
+        <field
+            name="id"
+            type="number"
+            label="JGLOBAL_FIELD_ID_LABEL"
+            labelclass="nowrap center hidden-phone"
+            class="center hidden-phone"
+            width="1%"
+        />
+
+    </fieldset>
+</form>
