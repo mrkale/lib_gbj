@@ -1,9 +1,9 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj. All rights reserved.
- * @license    GNU General Public License version 2 or later. See LICENSE.txt, LICENSE.php.
- * @since      3.7
+ * @copyright  (c) 2017 Libor Gabaj
+ * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * @since      3.8
  */
 
 // No direct access
@@ -12,7 +12,7 @@ defined('_JEXEC') or die;
 /**
  * View for handling records of an agenda, usually just first of them
  *
- * @since  3.7
+ * @since  3.8
  */
 class GbjSeedViewDetail extends JViewLegacy
 {
@@ -57,11 +57,6 @@ class GbjSeedViewDetail extends JViewLegacy
 	public $gridFields;
 
 	/**
-	 * @var   array  List of coded fields as a subset of form fields starting with "id_".
-	 */
-	public $codedFields;
-
-	/**
 	 * @var   array  List of additional fields for batch processing.
 	 */
 	public $batchFields;
@@ -79,6 +74,12 @@ class GbjSeedViewDetail extends JViewLegacy
 	 * @var  string
 	 */
 	public $listDirn;
+
+	/**
+	 *
+	 * @var   array  List of statistical measures.
+	 */
+	public $statistics;
 
 	/**
 	 * Constructor
@@ -118,9 +119,9 @@ class GbjSeedViewDetail extends JViewLegacy
 
 		// Execute model methods
 		$this->items = $this->get('Items');
+		$this->total = $this->get('Total');
+		$this->statistics = $this->get('Statistics');
 		$this->gridFields = $this->get('GridFields');
-		$this->codedFields = $this->get('CodedFields');
-		$this->total = count($this->items);
 
 		if ($this->total)
 		{
@@ -247,5 +248,15 @@ class GbjSeedViewDetail extends JViewLegacy
 
 		return is_object($this->model->parent) && (is_null($parentType)
 			? true : Helper::getParentRefName($parentType) === $this->model->parentType);
+	}
+
+	/**
+	 * Create HTML string for displaying statistics.
+	 *
+	 * @return  string  HTML display string.
+	 */
+	public function htmlStatistics()
+	{
+		return '';
 	}
 }

@@ -1,9 +1,9 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj. All rights reserved.
- * @license    GNU General Public License version 2 or later. See LICENSE.txt, LICENSE.php.
- * @since      3.7
+ * @copyright  (c) 2017-2019 Libor Gabaj
+ * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * @since      3.8
  */
 
 // No direct access
@@ -12,7 +12,7 @@ defined('_JEXEC') or die;
 /**
  * View for handling one record of agenda.
  *
- * @since  3.7
+ * @since  3.8
  */
 class GbjSeedViewForm extends JViewLegacy
 {
@@ -28,7 +28,7 @@ class GbjSeedViewForm extends JViewLegacy
 	 *
 	 * @var  string
 	 */
-	protected $item;
+	public $item;
 
 	/**
 	 * The object with form for an agenda record.
@@ -74,14 +74,14 @@ class GbjSeedViewForm extends JViewLegacy
 		$isNew		= ($this->item->id == 0);
 		$checkedOut	= !($this->item->checked_out == 0 || $this->item->checked_out == $userId);
 		$component  = Helper::getName();
-		$prefix     = '';
+		$title     = '';
 
 		if ($this->isParent())
 		{
-			$prefix = $this->model->parent->title . JText::_('LIB_GBJ_TITLE_SEPARATOR');
+			$title .= $this->model->parent->title . JText::_('LIB_GBJ_TITLE_SEPARATOR');
 		}
 
-		$title = JText::sprintf(strtoupper($component . '_FORM_' . $agenda), $prefix);
+		$title .= JText::_(strtoupper($component . '_' . $agenda));
 		JToolbarHelper::title($title);
 
 		JToolbarHelper::apply($agenda . '.apply');

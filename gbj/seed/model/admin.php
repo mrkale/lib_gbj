@@ -1,9 +1,9 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj. All rights reserved.
- * @license    GNU General Public License version 2 or later. See LICENSE.txt, LICENSE.php.
- * @since      3.7
+ * @copyright  (c) 2017-2019 Libor Gabaj
+ * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * @since      3.8
  */
 
 // No direct access
@@ -14,7 +14,7 @@ use Joomla\String\Normalise;
 /**
  * General model methods for the detail of a record in an agenda.
  *
- * @since  3.7
+ * @since  3.8
  */
 abstract class GbjSeedModelAdmin extends JModelAdmin
 {
@@ -218,10 +218,8 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 			// Generate start date if required; preferably as current date
 			$fieldName = 'date_on';
 
-			if (array_key_exists($fieldName, $fields)
-				&& (empty($record->$fieldName)
-				|| JFactory::getDate($record->$fieldName)->toUnix() < 0)
-			)
+			if (array_key_exists($fieldName, $fields) && empty($record->$fieldName)
+				&& $this->isXmlRequired($fieldName))
 			{
 				$record->$fieldName = JFactory::getDate()->toSQL();
 			}
@@ -232,10 +230,8 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 			 */
 			$fieldName = 'date_off';
 
-			if (array_key_exists($fieldName, $fields)
-				&& (empty($record->$fieldName)
-				|| JFactory::getDate($record->$fieldName)->toUnix() < 0)
-			)
+			if (array_key_exists($fieldName, $fields) && empty($record->$fieldName)
+				&& $this->isXmlRequired($fieldName))
 			{
 				$fieldStart = 'date_on';
 
@@ -303,7 +299,15 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 				case 'date':
 				case 'datetime':
 				case 'timestamp':
-					$table->$fieldName = JFactory::getDate($table->$fieldName)->toSql();
+					// Sanitize datetime string
+					if ($table->$fieldName)
+					{
+						$table->$fieldName = JFactory::getDate($table->$fieldName)->toSql();
+					}
+					else
+					{
+						$table->$fieldName = $this->getDbo()->getNullDate();
+					}
 					break;
 
 				default:
@@ -315,7 +319,7 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 		if (array_key_exists('title', $fields))
 		{
 			// Modify copy
-			if ($table->$primaryKeyName == 0 && !$table->created == '')
+			if ($table->$primaryKeyName == 0 && (int) $table->created > 0)
 			{
 				$table->title .= JText::_('LIB_GBJ_CLONE');
 			}
@@ -334,7 +338,7 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 			}
 
 			// Modify copy
-			if ($table->$primaryKeyName == 0 && !$table->created == '')
+			if ($table->$primaryKeyName == 0 && (int) $table->created > 0)
 			{
 				$table->alias .= JText::_('LIB_GBJ_CLONE');
 			}
@@ -540,34 +544,14 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 		// For case than there are no coded fields
 		$this->codedFields = array();
 
-		foreach ($this->getRecordFields() as $fieldName => $fieldObject)
+		foreach (array_keys($this->getRecordFields()) as $fieldName)
 		{
-			if (substr($fieldName, 0, 3) == Helper::COMMON_FIELD_CODED_PREFIX)
+			if (Helper::isCodedField($fieldName))
 			{
-				$rootName = $this->getCodedRoot($fieldName);
-				$this->codedFields[$fieldName]['root'] = $rootName;
+				$this->codedFields[$fieldName]['root'] = Helper::getCodedRoot($fieldName);
 			}
 		}
 
 		return $this->codedFields;
-	}
-
-	/**
-	 * Determine corresponding code table root name for a field name.
-	 *
-	 * @param   string   $fieldName   Field name.
-	 *
-	 * @return  string   Code table root name.
-	 */
-	protected function getCodedRoot($fieldName)
-	{
-		$root = preg_replace(
-			'/^' . Helper::COMMON_FIELD_CODED_PREFIX . '/',
-			'',
-			$fieldName,
-			1
-		);
-
-		return $root;
 	}
 }

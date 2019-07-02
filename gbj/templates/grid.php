@@ -1,9 +1,9 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj. All rights reserved.
- * @license    GNU General Public License version 2 or later. See LICENSE.txt, LICENSE.php.
- * @since      3.7
+ * @copyright  (c) 2017-2019 Libor Gabaj
+ * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * @since      3.8
  */
 
 // No direct access
@@ -20,7 +20,7 @@ $pageclass_sfx = htmlspecialchars($tparams->get('pageclass_sfx'));
 
 // Data
 $agenda = $this->getName();
-$agendaTitle = JText::_(strtoupper($componentName) . '_SUBMENU_' . strtoupper($agenda));
+$agendaTitle = JText::_(strtoupper($componentName . '_' . $agenda));
 $parent      = $this->model->parent;
 $grandparent = $this->model->grandparent;
 $grandparentTitle = is_object($grandparent) ? $grandparent->title : null;
@@ -28,7 +28,7 @@ $parentTitle      = is_object($parent) ? $parent->title : null;
 $parentType = $this->model->parentType;
 $parentView = Helper::plural($parentType);
 $parentAgendaTitle = is_object($parent)
-	? JText::_(strtoupper($componentName) . '_SUBMENU_' . strtoupper($parentView))
+	? JText::_(strtoupper($componentName . '_' . $parentView))
 	: null;
 $parentPrefix = $grandparentTitle
 	?? $this->escape($tparams->get('page_heading', $parentAgendaTitle ?? $agendaTitle));
@@ -36,7 +36,23 @@ $agendaLink = JRoute::_(Helper::getUrlViewParentDel($parentView, $agenda));
 
 if ($tparams->get('show_pagedescription'))
 {
-	$description = $this->isParent() ? $this->model->parent->description : $tparams->get('pagedescription_data');
+	if ($this->isParent())
+	{
+		$description = $this->model->parent->description;
+	}
+	else
+	{
+		$langConst = strtoupper($componentName . '_' . $agenda . '_DESC');
+		$description = JText::_($langConst);
+
+		// Language constant does not exist (is not defined)
+		if ($description == $langConst)
+		{
+			$description = '';
+		}
+
+		$description = trim($description . ' ' . $tparams->get('pagedescription_data'));
+	}
 }
 ?>
 <div class="<?php echo Helper::getExtensionCore() . $pageclass_sfx; ?>">
@@ -54,7 +70,9 @@ if ($tparams->get('show_pagedescription'))
 	</h1>
 	<?php if (!empty($description)): ?>
 	<div>
-		<?php echo $description; ?>
+		<h4>
+			<?php echo $description; ?>
+		</h4>
 	</div>
 	<?php endif; ?>
 	<?php if ($this->isParent()): ?>

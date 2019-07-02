@@ -1,9 +1,9 @@
 <?php
 /**
  * @package    Joomla.Component
- * @copyright  (c) 2017 Libor Gabaj. All rights reserved.
- * @license    GNU General Public License version 2 or later. See LICENSE.txt, LICENSE.php.
- * @since      3.7
+ * @copyright  (c) 2017-2019 Libor Gabaj
+ * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * @since      3.8
  */
 
 // No direct access
@@ -12,7 +12,7 @@ defined('_JEXEC') or die;
 /**
  * Definition constants and methods common and useful for every extension.
  *
- * @since  3.7
+ * @since  3.8
  *
  * @method      string  getClassController()       getClassController($name)     Get a full controller class name.
  * @method      string  getClassModel()			   getClassModel($name)			 Get a full model class name.
@@ -70,10 +70,17 @@ class GbjHelpersCommon
 	const COMMON_STATE_ARCHIVED = 2;
 	const COMMON_STATE_TRASHED = -2;
 	const COMMON_STATE_TOTAL = -99;
+	const COMMON_STATE_ALL = '*';
 
 	// Search field tag characters
 	const COMMON_SEARCH_TAG_FIELD = '#';
 	const COMMON_SEARCH_TAG_RANGE = '~';
+
+	// Format number parameters
+	const COMMON_FORMAT_NUMBER_DECIMALS = 3;
+	const COMMON_FORMAT_NUMBER_SEPARATOR_DECIMALS = '.';
+	const COMMON_FORMAT_NUMBER_SEPARATOR_THOUSANDS = ',';
+	const COMMON_FORMAT_SEPARATOR = ';';
 
 	// Session user variable for parent identification
 	const COMMON_SESSION_REFERENCE_PARENTS = 'parents';
@@ -83,6 +90,16 @@ class GbjHelpersCommon
 
 	// Name of parent identity table type
 	const COMMON_PARENT_IDENTITY_TYPE = 'type';
+
+	// HTML entities
+	const COMMON_HTML_SPACE = '&nbsp;';
+	const COMMON_HTML_LESS = '&lt;';
+	const COMMON_HTML_GREATER = '&gt;';
+	const COMMON_HTML_AMPERSAND = '&amp;';
+	const COMMON_HTML_QUOTATION = '&quot;';
+	const COMMON_HTML_APOSTROPH = '&apos;';
+	const COMMON_HTML_COPYRIGHT = '&copy;';
+	const COMMON_HTML_TRADEMARK = '&reg;';
 
 	/**
 	 * Convert input string into the proper form, which means the first letter
@@ -443,14 +460,14 @@ class GbjHelpersCommon
 	/**
 	 * Compose table name prefix.
 	 *
-	 * @param   boolean  $useRealPprefix  Flag about using a real table prefix
+	 * @param   boolean  $useRealPrefix  Flag about using a real table prefix
 	 *
 	 * @return  string  Table name prefix
 	 */
-	private static function getTablePrefix($useRealPprefix = false)
+	private static function getTablePrefix($useRealPrefix = false)
 	{
 		$prefix = strtolower(
-			(boolval($useRealPprefix) ? JFactory::getApplication()->get('dbprefix') : self::COMMON_TABLE_PREFIX)
+			(boolval($useRealPrefix) ? JFactory::getApplication()->get('dbprefix') : self::COMMON_TABLE_PREFIX)
 			. Helper::getClassPrefix() . '_'
 		);
 
@@ -460,14 +477,14 @@ class GbjHelpersCommon
 	/**
 	 * Compose full table name from the base name.
 	 *
-	 * @param   string   $baseName        Base name of the table
-	 * @param   boolean  $useRealPprefix  Flag about using a real table prefix
+	 * @param   string   $baseName       Base name of the table
+	 * @param   boolean  $useRealPrefix  Flag about using a real table prefix
 	 *
 	 * @return  string  Full name of a table with prefix placeholder
 	 */
-	public static function getTableName($baseName, $useRealPprefix = false)
+	public static function getTableName($baseName, $useRealPrefix = false)
 	{
-		$tableName = self::getTablePrefix($useRealPprefix) . $baseName;
+		$tableName = self::getTablePrefix($useRealPrefix) . $baseName;
 
 		return $tableName;
 	}
@@ -710,7 +727,7 @@ class GbjHelpersCommon
 	{
 		foreach (Helper::$helperViewsInSubmenu as $viewName)
 		{
-			$langConst = strtoupper(self::getName(array('SUBMENU', $viewName), '_'));
+			$langConst = strtoupper(self::getName($viewName, '_'));
 			JHtmlSidebar::addEntry(
 				JText::_($langConst),
 				self::getUrlViewParentDel($viewName, $viewName),
@@ -899,5 +916,110 @@ class GbjHelpersCommon
 		$db->setQuery($query);
 
 		return !is_null($db->loadResult());
+	}
+
+	/**
+	 * Check if a field is coded one.
+	 *
+	 * Coded column starts with the dedicated prefix.
+	 *
+	 * @param   string   $fieldName   Field name.
+	 *
+	 * @return  boolean  Flag about field codeing.
+	 */
+	public static function isCodedField($fieldName)
+	{
+		return preg_match('/^' . self::COMMON_FIELD_CODED_PREFIX . '/', $fieldName);
+	}
+
+	/**
+	 * Determine corresponding root name for a coded field name.
+	 *
+	 * @param   string   $fieldName   Coded field name.
+	 *
+	 * @return  string   Root name.
+	 */
+	public static function getCodedRoot($fieldName)
+	{
+		$root = preg_replace(
+			'/^' . self::COMMON_FIELD_CODED_PREFIX . '/',
+			'',
+			$fieldName,
+			1
+		);
+
+		return $root;
+	}
+
+	/**
+	 * Construct coded field name from parent type.
+	 *
+	 * @param   string   $parentType   Parent type as a custom field type.
+	 *
+	 * @return  string   Coded field.
+	 */
+	public static function getCodedField($parentType)
+	{
+		return self::COMMON_FIELD_CODED_PREFIX . $parentType;
+	}
+
+	/**
+	 * Format number to a formatted string.
+	 *
+	 * @param   number   $number			Number to be formatted.
+	 * @param   string   $formatParamList   List of formatting parameters separated
+	 *                                      by semicolon in default:
+	 *                                      number of decimals, decimal separator,
+	 *                                      thousands separator
+	 *
+	 * @return  string   Formatted number as a string.
+	 */
+	public static function formatNumber($number, $formatParamList=null)
+	{
+		if (is_null($number))
+		{
+			return null;
+		}
+
+		$formatDecimals = self::COMMON_FORMAT_NUMBER_DECIMALS;
+		$formatSeparatorDecimals = self::COMMON_FORMAT_NUMBER_SEPARATOR_DECIMALS;
+		$formatSeparatorThousands = self::COMMON_FORMAT_NUMBER_SEPARATOR_THOUSANDS;
+
+		if (!is_null($formatParamList))
+		{
+			$formatParams = explode(self::COMMON_FORMAT_SEPARATOR, strval($formatParamList));
+			$formatDecimals = intval($formatParams[0]);
+			$formatSeparatorDecimals = $formatParams[1] ?? $formatSeparatorDecimals;
+			$formatSeparatorThousands = $formatParams[2] ?? $formatSeparatorThousands;
+		}
+
+		return number_format($number, $formatDecimals,
+			$formatSeparatorDecimals,
+			$formatSeparatorThousands
+		);
+	}
+
+	/**
+	 * Calculate number of days between two dates including the end day.
+	 *
+	 * @param   string   $dateStart			Beginning date in ANSI format
+	 * @param   string   $dateStop			Finnish date in ANSI format
+	 *
+	 * @return  int   Number of days within the period.
+	 */
+	public static function calculatePeriodDays($dateStart, $dateStop)
+	{
+		if (is_null($dateStart) || is_null($dateStop))
+		{
+			return null;
+		}
+		$jdate = new JDate($dateStart);
+		$timestampStart = $jdate->toUnix();
+		$jdate = new JDate($dateStop);
+		$timestampStop = $jdate->toUnix();
+		$period = ($timestampStop - $timestampStart) / 86400;
+		$period += 1;
+
+		return $period;
 	}
 }

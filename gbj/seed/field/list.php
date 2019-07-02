@@ -1,9 +1,9 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj. All rights reserved.
- * @license    GNU General Public License version 2 or later. See LICENSE.txt, LICENSE.php.
- * @since      3.7
+ * @copyright  (c) 2017-2019 Libor Gabaj
+ * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * @since      3.8
  */
 
 // No direct access
@@ -15,7 +15,7 @@ JFormHelper::loadFieldClass('list');
 /**
  * Class for a custom field.
  *
- * @since  3.7
+ * @since  3.8
  */
 class GbjSeedFieldList extends JFormFieldList
 {
@@ -78,12 +78,62 @@ class GbjSeedFieldList extends JFormFieldList
 				}
 				break;
 
+			case 'Yearoff':
+				$table = Helper::getTable($app->input->get('view'));
+				$query
+					->select('DISTINCT YEAR(a.date_off) AS value')
+					->from($db->quoteName($table, 'a'))
+					->order('a.date_off DESC');
+				$db->setQuery($query);
+
+				try
+				{
+					$rows = $db->loadObjectList();
+				}
+				catch (RuntimeException $e)
+				{
+					$app->enqueueMessage($e->getMessage(), 'warning');
+				}
+
+				foreach ($rows as $key => $row)
+				{
+					$rows[$key]->text = $row->value;
+				}
+				break;
+
 			case 'Month':
 				$table = Helper::getTable($app->input->get('view'));
 				$query
 					->select(array(
 						'DISTINCT MONTH(a.date_on) AS value',
 						'MONTHNAME(a.date_on) AS text',
+						)
+					)
+					->from($db->quoteName($table, 'a'))
+					->order(1);
+				$db->setQuery($query);
+
+				try
+				{
+					$rows = $db->loadObjectList();
+				}
+				catch (RuntimeException $e)
+				{
+					$app->enqueueMessage($e->getMessage(), 'warning');
+				}
+
+				foreach ($rows as $key => $row)
+				{
+					$rows[$key]->text = Helper::proper(JText::_(strtoupper($row->text)));
+				}
+				break;
+
+			case 'Monthoff':
+				$table = Helper::getTable($app->input->get('view'));
+				$query
+					->select(array(
+						'DISTINCT MONTH(a.date_off) AS value',
+						'MONTHNAME(a.date_off) AS text',
 						)
 					)
 					->from($db->quoteName($table, 'a'))
@@ -149,9 +199,15 @@ class GbjSeedFieldList extends JFormFieldList
 	 */
 	protected function prependVoidOptions($rows = array())
 	{
+		// Remove unknown options
+		$rows = array_filter($rows, function($val) {
+			return $val->value != '0';
+		});
+
+		// Add null key
 		$unknown = new stdClass;
 		$unknown->value = '0';
-		$unknown->text = JText::_('JNONE');
+		$unknown->text = JText::_('LIB_GBJ_NONE');
 		array_unshift($rows, $unknown);
 
 		return $rows;

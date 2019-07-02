@@ -2,9 +2,9 @@
 /**
  * @package     Joomla.Library
  * @subpackage  Layout
- * @copyright   (c) 2017 Libor Gabaj. All rights reserved.
- * @license     GNU General Public License version 2 or later. See LICENSE.txt, LICENSE.php.
- * @since       3.7
+ * @copyright  (c) 2017-2019 Libor Gabaj
+ * @license     GNU General Public License version 2 or later; see LICENSE.txt
+ * @since       3.8
  */
 
 // No direct access
@@ -28,22 +28,51 @@ $field = $displayData->gridFields[$field_name];
 // XML attribute - flag about disabling an element - default FALSE
 $disabled = strtoupper($field->getAttribute('disabled') ?? 'FALSE') === 'TRUE';
 
-// XML attribute - flag about grid cell default value - default TRUE
-$gridDefault = strtoupper($field->getAttribute('defaulted') ?? 'TRUE') === 'TRUE';
-
-// XML attribute - default value for a field - default JNONE
-$gridDefaultValue = JText::_($field->getAttribute('default') ?? 'JNONE');
-
-// XML attribute - format for displaying value - default NULL
-$gridFormat = $field->getAttribute('format');
-
-// XML attribute - suffix for displaying value - default NULL
-$gridSuffix = JText::_($field->getAttribute('suffix'));
-
 // Render field in a detail page
 if (!$disabled)
 {
-	$field_value = $record->$field_name;
+	// XML attribute - flag about grid cell default value - default TRUE
+	$gridDefault = strtoupper($field->getAttribute('defaulted') ?? 'TRUE') === 'TRUE';
+
+	// XML attribute - default value for a field - default NONE
+	$gridDefaultValue = JText::_($field->getAttribute('default') ?? 'LIB_GBJ_NONE_VALUE');
+
+	// XML attribute - format for displaying value - default NULL
+	$gridFormat = $field->getAttribute('format');
+
+	// XML attribute - prefix for displaying value - default NULL
+	$gridPrefix = $field->getAttribute('prefix');
+
+	if ($gridPrefix)
+	{
+		$prefixValue = JText::_($gridPrefix);
+
+		if ($prefixValue == $gridPrefix)	// No language constants
+		{
+			$prefixValue = $record->$gridPrefix ?? JText::_('LIB_GBJ_NONE_PREFIX');
+		}
+
+		$gridPrefix = ltrim($prefixValue . Helper::COMMON_HTML_SPACE);
+	}
+
+	// XML attribute - suffix for displaying value - default NULL
+	$gridSuffix = $field->getAttribute('suffix');
+
+	if ($gridSuffix)
+	{
+		$suffixValue = JText::_($gridSuffix);
+
+		if ($suffixValue == $gridSuffix)	// No language constants
+		{
+			$suffixValue = $record->$gridSuffix ?? JText::_('LIB_GBJ_NONE_SUFFIX');
+		}
+
+		$gridSuffix = rtrim(Helper::COMMON_HTML_SPACE . $suffixValue);
+	}
+
+	// XML attribute - Force value from data field
+	$fieldData = $field->getAttribute('datafield');
+	$field_value = $record->$fieldData ?? $record->$field_name;
 
 	$renderTag = $displayData->htmlAttribute('class', $field->getAttribute('labelclass'))
 		. $displayData->htmlAttribute('width', $field->getAttribute('width'));
@@ -57,28 +86,55 @@ if (!$disabled)
 	}
 
 	// Formatting by element type
-	switch ($field->getAttribute('type'))
+	$field_type = $field->getAttribute('type');
+	if (is_null($field_type) && Helper::isCodedField($field_name))
+	{
+		$field_type =  "code-value";
+	}
+
+	switch ($field_type)
 	{
 		case 'date':
-
-			if (!is_null($gridFormat))
+			if (JFactory::getDate($field_value)->toUnix() < 0)
 			{
-				$field_value = JHtml::_('date', $field_value, JText::_($gridFormat));
+				$field_value = null;
+			}
+			elseif (isset($field_value))
+			{
+				if (!is_null($gridFormat))
+				{
+					$field_value = JHtml::_('date', $field_value, JText::_($gridFormat));
+				}
+
+				// Highlight future date
+				$dateCompareFormat = "Ymd";
+
+				if (JFactory::getDate($record->$field_name)->format($dateCompareFormat) > JFactory::getDate()->format($dateCompareFormat))
+				{
+					$cparams = JComponentHelper::getParams(Helper::getName());
+					$renderTag = $displayData->htmlAttribute('class', $cparams->get('future_row_class'));
+				}
 			}
 
-			// Highlight future date
-			$dateCompareFormat = "Ymd";
+			break;
 
-			if (JFactory::getDate($record->$field_name)->format($dateCompareFormat) > JFactory::getDate()->format($dateCompareFormat))
+		case 'number':
+			if (!is_null($gridFormat))
 			{
-				$cparams = JComponentHelper::getParams(Helper::getName());
-				$renderTag = $displayData->htmlAttribute('class', $cparams->get('future_row_class'));
+				$field_value = Helper::formatNumber(
+					$field_value,
+					JText::_($gridFormat)
+				);
 			}
 
 			break;
 
 		case 'user':
 			$field_value = JFactory::getUser($field_value)->username;
+			break;
+
+		case 'code-value':
+			$field_value = empty($field_value) ? null : $field_value;
 			break;
 	}
 
@@ -92,14 +148,16 @@ if (!$disabled)
 	// Suppress default value
 	if (!$gridDefault)
 	{
-		unset($gridDefaultValue);
+		$gridDefaultValue = null;
 	}
 
-	// Displayed value
-	$renderData = (empty($field_value) ? $gridDefaultValue : $field_value);
+	// Displayed value, prefix, and suffix
+	$renderData = $gridDefaultValue;
 
-	// Add suffix
-	$renderData .= $gridSuffix;
+	if (isset($field_value) && !is_null($field_value))
+	{
+		$renderData = $gridPrefix . $field_value . $gridSuffix;
+	}
 
 	// Construct element as the hypertext
 	if (!is_null($field_url))

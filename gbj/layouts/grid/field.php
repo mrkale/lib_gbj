@@ -2,9 +2,9 @@
 /**
  * @package     Joomla.Library
  * @subpackage  Layout
- * @copyright   (c) 2017 Libor Gabaj. All rights reserved.
- * @license     GNU General Public License version 2 or later. See LICENSE.txt, LICENSE.php.
- * @since       3.7
+ * @copyright  (c) 2017-2019 Libor Gabaj
+ * @license     GNU General Public License version 2 or later; see LICENSE.txt
+ * @since       3.8
  */
 
 // No direct access
@@ -27,29 +27,34 @@ if (is_array($list))
 else
 {
 	// Create options from codebook
-	$app = JFactory::getApplication();
-	$db = JFactory::getDbo();
-	$query = $db->getQuery(true)
-		->select(array($db->quoteName('a.id', 'value'), $db->quoteName('a.title', 'text')))
-		->from($db->quoteName(Helper::getCodebookTable($field), 'a'))
-		->where($db->quoteName('a.state') . '=' . (int) Helper::COMMON_STATE_PUBLISHED)
-		->order($db->quoteName('a.title'));
-	$db->setQuery($query);
+	$table = Helper::getCodebookTable($field);
 
-	try
+	if (!is_null($table))
 	{
-		$options = $db->loadObjectList();
-	}
-	catch (RuntimeException $e)
-	{
-		$app->enqueueMessage($e->getMessage(), 'error');
+		$app = JFactory::getApplication();
+		$db = JFactory::getDbo();
+		$query = $db->getQuery(true)
+			->select(array($db->quoteName('a.id', 'value'), $db->quoteName('a.title', 'text')))
+			->from($db->quoteName($table, 'a'))
+			->where($db->quoteName('a.state') . '=' . (int) Helper::COMMON_STATE_PUBLISHED)
+			->order($db->quoteName('a.title'));
+		$db->setQuery($query);
+
+		try
+		{
+			$options = $db->loadObjectList();
+		}
+		catch (RuntimeException $e)
+		{
+			$app->enqueueMessage($e->getMessage(), 'error');
+		}
 	}
 }
 
 // Merge any additional options in the XML definition.
 $unknown = new stdClass;
 $unknown->value = '0';
-$unknown->text = JText::_('JNONE');
+$unknown->text = JText::_('LIB_GBJ_NONE_BATCH');
 array_unshift($options, $unknown);
 
 $langLabel = strtoupper(Helper::getExtensionName() . '_BATCH_' . $field . '_LABEL');

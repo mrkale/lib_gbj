@@ -1,9 +1,9 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj. All rights reserved.
- * @license    GNU General Public License version 2 or later. See LICENSE.txt, LICENSE.php.
- * @since      3.7
+ * @copyright  (c) 2017 Libor Gabaj
+ * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * @since      3.8
  */
 
 // No direct access
@@ -84,11 +84,12 @@ if ($fieldCount > 1)
 }
 elseif ($fieldCount == 1)
 {
-	$tableTags = $renderFields[0]['tag'];
 	$tableData = $renderFields[0]['data'];
 }
+
+$tableTags = $renderFields[0]['tag'];
 ?>
 
 <?php if ($fieldCount) : ?>
-<th <?php echo $tableTags; ?>><?php echo $tableData; ?></th>
+<th<?php echo $tableTags; ?>><?php echo $tableData; ?></th>
 <?php endif;

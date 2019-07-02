@@ -1,9 +1,9 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj. All rights reserved.
- * @license    GNU General Public License version 2 or later. See LICENSE.txt, LICENSE.php.
- * @since      3.7
+ * @copyright  (c) 2017-2019 Libor Gabaj
+ * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * @since      3.8
  */
 
 // No direct access
@@ -28,13 +28,14 @@ $canChange = $user->authorise('core.edit.state', Helper::getName())
 // Options
 $options = $this->getOptions();
 $fieldList = $options->get('fields');
+$splits = $options->get('splits');
 
 if (is_string($fieldList))
 {
 	$fieldList = explode(',', $fieldList);
 }
 
-foreach ($fieldList as $fieldName)
+foreach ($fieldList as $fieldIdx => $fieldName)
 {
 	$fieldName = trim($fieldName);
 	$field = $displayData->gridFields[$fieldName];
@@ -48,64 +49,211 @@ foreach ($fieldList as $fieldName)
 		// XML attribute - flag about grid cell default value - default TRUE
 		$gridDefault = strtoupper($field->getAttribute('defaulted') ?? 'TRUE') === 'TRUE';
 
-		// XML attribute - default value for a field - default JNONE
-		$gridDefaultValue = JText::_($field->getAttribute('default') ?? 'JNONE');
+		// XML attribute - default value for a field - default NONE
+		$gridDefaultValue = JText::_($field->getAttribute('default') ?? 'LIB_GBJ_NONE_VALUE');
 
 		// XML attribute - format for displaying value - default NULL
 		$gridFormat = $field->getAttribute('format');
 
-		$fieldTags = $displayData->htmlAttribute('class', $field->getAttribute('class'));
-		$fieldValue = $record->$fieldName;
-		$fieldUrl = $options->get('url');
+		// XML attribute - prefix for displaying value - default NULL
+		$gridPrefix = $field->getAttribute('prefix');
 
-		// If url option is true, replace it with field value
-		if (is_bool($fieldUrl) && $fieldUrl)
+		if ($gridPrefix)
 		{
-			$fieldUrl = $fieldValue;
+			$prefixValue = JText::_($gridPrefix);
+
+			if ($prefixValue == $gridPrefix)	// No language constants
+			{
+				$prefixValue = $record->$gridPrefix ?? JText::_('LIB_GBJ_NONE_PREFIX');
+			}
+
+			$gridPrefix = ltrim($prefixValue . Helper::COMMON_HTML_SPACE);
 		}
 
-		switch ($field->getAttribute('type'))
+		// XML attribute - suffix for displaying value - default NULL
+		$gridSuffix = $field->getAttribute('suffix');
+
+		if ($gridSuffix)
 		{
-			case 'checkbox':
-				$fieldValue = JHtml::_('grid.id', $fieldValue, $record->id);
-				break;
+			$suffixValue = JText::_($gridSuffix);
 
-			case 'seqno':
-				$fieldValue = (string) ($fieldValue + 1) . '.';
-				break;
+			if ($suffixValue == $gridSuffix)	// No language constants
+			{
+				$suffixValue = $record->$gridSuffix ?? JText::_('LIB_GBJ_NONE_SUFFIX');
+			}
 
+			$gridSuffix = rtrim(Helper::COMMON_HTML_SPACE . $suffixValue);
+		}
 
-			case 'date':
-				if (!is_null($gridFormat))
+		$fieldTags = $displayData->htmlAttribute('class', $field->getAttribute('class'));
+
+		// XML attribute - Force value from data field
+		$fieldData = $field->getAttribute('datafield');
+
+		// XML attribute - field variants - default NULL
+		$fieldVariants = $field->getAttribute('variants') ?? '#';
+
+		// Process field variants
+		unset($variantFields);
+		unset($variantFieldsShowEmpty);
+		unset($fieldValue);
+		$variants = explode(',', $fieldVariants);
+
+		foreach ($variants as $variantNum => $variant)
+		{
+			$variantFieldsShowEmpty[$variantNum] = true;
+
+			if ($variant == '#')
+			{
+				$variantFields[$variantNum] = $fieldName;
+			}
+			else
+			{
+				if (substr($variant, 0, 1) == '#')
 				{
-					$fieldValue = JHtml::_('date', $fieldValue, JText::_($gridFormat));
+					$variant = substr($variant, 1);
+					$variantFieldsShowEmpty[$variantNum] = false;
 				}
 
-				// Highlight future date
-				$dateCompareFormat = "Ymd";
+				$variantFields[$variantNum] = $fieldName . $variant;
+			}
+		}
 
-				if (JFactory::getDate($record->$fieldName)->format($dateCompareFormat) > JFactory::getDate()->format($dateCompareFormat))
+		$allEmptyVariants = true;
+
+		foreach ($variantFields as $variantNum => $variantFieldName)
+		{
+			if (!isset($record->$variantFieldName))
+			{
+				continue;
+			}
+
+			$variantFieldValue = $record->$fieldData ?? $record->$variantFieldName;
+
+			// If url option is true, replace it with field value
+			$fieldUrl = $options->get('url');
+
+			if (is_bool($fieldUrl) && $fieldUrl)
+			{
+				$fieldUrl = $variantFieldValue;
+			}
+
+			// Format field value
+			$fieldType = $field->getAttribute('type');
+
+			if (is_null($fieldType) && Helper::isCodedField($variantFieldName))
+			{
+				$fieldType = "code-value";
+			}
+
+			switch ($fieldType)
+			{
+				case 'checkbox':
+					$variantFieldValue = JHtml::_('grid.id', $variantFieldValue, $record->id);
+					break;
+
+				case 'seqno':
+					$variantFieldValue = (string) ($variantFieldValue + 1) . '.';
+
+					if ($record->state == Helper::COMMON_STATE_ARCHIVED)
+					{
+						$variantFieldValue .= JText::_('LIB_GBJ_RECORD_FLAG_ARCHIVED');
+					}
+					break;
+
+				case 'date':
+					if (JFactory::getDate($record->$fieldName)->toUnix() < 0)
+					{
+						$variantFieldValue = null;
+					}
+					elseif (isset($variantFieldValue))
+					{
+						if (!is_null($gridFormat))
+						{
+							$variantFieldValue = JHtml::_('date', $variantFieldValue, JText::_($gridFormat));
+						}
+
+						// Highlight future date
+						$dateCompareFormat = "Ymd";
+
+						if (JFactory::getDate($record->$fieldName)->format($dateCompareFormat) > JFactory::getDate()->format($dateCompareFormat))
+						{
+							$variantFieldValue = '<strong><em>' . $variantFieldValue . '</em></strong>';
+						}
+					}
+
+					break;
+
+				case 'number':
+					if (!is_null($gridFormat))
+					{
+						$variantFieldValue = Helper::formatNumber(
+							$variantFieldValue,
+							JText::_($gridFormat)
+						);
+					}
+
+					break;
+
+				case 'button-published':
+					$variantFieldValue = JHtml::_(
+						'jgrid.published',
+						$record->state,
+						$record->sequence,
+						$viewName . '.', $canChange,
+						'cb',
+						$record->publish_up,
+						$record->publish_down
+					);
+					$isButtons = true;
+					break;
+
+				case 'button-featured':
+					$method = Helper::proper(Helper::getLibraryDir()) . '.html.featured';
+					$variantFieldValue = JHtml::_($method, $record->sequence, $record->featured, $canChange, $viewName);
+					$isButtons = true;
+					break;
+
+				case 'icon-value':
+					$icon = $field->getAttribute('icon' . $variantFieldValue);
+					$variantFieldValue = '<span class="' . $icon . '"</span>';
+					break;
+
+				case 'code-value':
+					$variantFieldValue = empty($variantFieldValue) ? null : $variantFieldValue;
+					break;
+			}
+
+			// Concatenate field variant
+			if ($variantNum == 0)
+			{
+				if (!empty($variantFieldValue) || $variantFieldsShowEmpty[$variantNum])
 				{
-					$fieldValue = '<strong><em>' . $fieldValue . '</em></strong>';
+					$fieldValue = $variantFieldValue;
 				}
+				else
+				{
+					$fieldValue = '';
+				}
+			}
+			else
+			{
+				if (isset($fieldValue)
+					&& (!empty($variantFieldValue) || $variantFieldsShowEmpty[$variantNum]))
+				{
+					$fieldValue .= JText::_('LIB_GBJ_FIELD_RATIO') . $variantFieldValue;
+				}
+			}
 
-				break;
+			if (!empty($variantFieldValue))
+			{
+				$allEmptyVariants = false;
+			}
+		}
 
-			case 'button-published':
-				$fieldValue = JHtml::_('jgrid.published', $record->state, $record->sequence, $viewName . '.', $canChange, 'cb', $record->publish_up, $record->publish_down);
-				$isButtons = true;
-				break;
-
-			case 'button-featured':
-				$method = Helper::proper(Helper::getLibraryDir()) . '.html.featured';
-				$fieldValue = JHtml::_($method, $record->sequence, $record->featured, $canChange, $viewName);
-				$isButtons = true;
-				break;
-
-			case 'icon-value':
-				$icon = $field->getAttribute('icon' . $fieldValue);
-				$fieldValue = '<span class="' . $icon . '"</span>';
-				break;
+		if ($allEmptyVariants)
+		{
+			$fieldValue = null;
 		}
 
 		// Construct element as the tooltip
@@ -121,11 +269,16 @@ foreach ($fieldList as $fieldName)
 			$gridDefaultValue = null;
 		}
 
-		// Displayed value
-		$fieldData = empty($fieldValue) ? $gridDefaultValue : $fieldValue;
+		// Displayed value, prefix, and suffix
+		$fieldData = $gridDefaultValue;
 
-		// Construct element as the hypertext
-		if (!is_null($fieldUrl))
+		if (isset($fieldValue) && !is_null($fieldValue))
+		{
+			$fieldData = $gridPrefix . $fieldValue . $gridSuffix;
+		}
+
+		// Construct element as the hypertext only for the first field in the list
+		if (isset($fieldUrl) && !is_null($fieldUrl) && $fieldIdx == 0)
 		{
 			$fieldData = '<a href="'
 				. JRoute::_($fieldUrl)
@@ -156,11 +309,27 @@ if ($fieldCount > 1)
 	}
 	else
 	{
+		$splits = $splits ?? count($renderFields) - 1;
+
 		foreach ($renderFields as $key => $renderField)
 		{
+			if (empty($renderField['data']))
+			{
+				$splits--;
+				continue;
+			}
+
 			if ($key > 0)
 			{
-				$tableData .= '<br />';
+				$splitToken = ' ';
+
+				if ($splits)
+				{
+					$splitToken = '<br />';
+					$splits--;
+				}
+
+				$tableData .= $splitToken;
 			}
 
 			$tableData .= '<span' . $renderField['tag'] . '>' . $renderField['data'] . '</span>';

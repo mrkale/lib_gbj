@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+@package    Joomla.Library
+@copyright  (c) 2019 Libor Gabaj
+@license    GNU General Public License version 2 or later; see LICENSE.txt
+@since      3.8
+-->
+<form>
+
+    <fields name="filter">
+        <field
+            name="search"
+            label="JSEARCH_FILTER_LABEL"
+            description="LIB_GBJ_SEARCH_VALUE_DESC"
+            hint="JSEARCH_FILTER"
+            class="js-stools-search-string"
+            noresults="JGLOBAL_NO_MATCHING_RESULTS"
+        />
+
+        <field
+            name="state"
+            type="list"
+            onchange="this.form.submit();"
+        >
+            <option value="">JOPTION_SELECT_PUBLISHED</option>
+            <option value="*">JALL</option>
+            <option value="1">JPUBLISHED</option>
+            <option value="2">JARCHIVED</option>
+        </field>
+
+        <field
+            name="featured"
+            type="list"
+            label="LIB_GBJ_SELECT_FEATURED"
+            onchange="this.form.submit();"
+        >
+            <option value="">LIB_GBJ_SELECT_FEATURED</option>
+            <option value="1">LIB_GBJ_FEATURED</option>
+            <option value="0">LIB_GBJ_UNFEATURED</option>
+        </field>
+    </fields>
+
+</form>

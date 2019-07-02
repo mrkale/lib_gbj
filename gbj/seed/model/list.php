@@ -1,18 +1,20 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj. All rights reserved.
- * @license    GNU General Public License version 2 or later. See LICENSE.txt, LICENSE.php.
- * @since      3.7
+ * @copyright  (c) 2017-2019 Libor Gabaj
+ * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * @since      3.8
  */
 
 // No direct access
 defined('_JEXEC') or die;
 
+use Joomla\Utilities\ArrayHelper;
+
 /**
  * General model methods for the list of records in an agenda.
  *
- * @since  3.7
+ * @since  3.8
  */
 class GbjSeedModelList extends JModelList
 {
@@ -24,7 +26,6 @@ class GbjSeedModelList extends JModelList
 	/**
 	 * @var   array  Associated array with list of various forms of coded fields
 	 *				 as a subset of form fields starting with "id_".
-	 *               [$fieldName]['column'] -- corresponding table column names
 	 *               [$fieldName]['root'] -- corresponding code table root names
 	 */
 	public $codedFields = null;
@@ -65,35 +66,91 @@ class GbjSeedModelList extends JModelList
 	public $fieldFullordering;
 
 	/**
+	 * The filter form object with field attributes
+	 *
+	 * @var object
+	 */
+	protected $filterForm;
+
+	const FILTER_FIELDS_GROUP = 'filter';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param   array  $config  Associative array of configuration settings.
 	 */
 	public function __construct($config = array())
 	{
-		// Button fields blacklisted
+		$this->filterBlacklist[] = 'description';
 		$this->filterBlacklist[] = 'sequence';
-		$this->filterBlacklist[] = 'featured';
 
-		// External filter fields
 		if (!array_key_exists('filter_fields', (array) $config))
 		{
 			$config['filter_fields'] = array();
 		}
 
-		// Add all form fields
-		foreach (array_keys($this->getGridFields()) as $fieldName)
+		// Read filter form if exists
+		$errors = $this->getErrors();
+		$this->filterForm = $this->getFilterForm(null, false);
+
+		// Set exact filter fields from filter form
+		if (is_object($this->filterForm))
 		{
-			$config['filter_fields'][] = $fieldName;
+			$filterFields = $this->filterForm->getGroup(self::FILTER_FIELDS_GROUP);
+
+			foreach ($filterFields as $fieldName => $filterField)
+			{
+				$fieldName = 'filter_' . $filterField->getAttribute('name');
+
+				if ($filterField->getAttribute('type') == 'subform')
+				{
+					$subformSource = $filterField->getAttribute('formsource')
+						?? Helper::getLibraryDir(true)
+						. DIRECTORY_SEPARATOR
+						. Helper::COMMON_FORM_BASEDIR
+						. DIRECTORY_SEPARATOR
+						. $fieldName
+						. '.xml';
+					$form = \JForm::getInstance($fieldName, $subformSource);
+					$subformFilterFields = $form->getGroup(self::FILTER_FIELDS_GROUP);
+					unset($filterFields[$fieldName]);
+					$filterFields = array_merge($subformFilterFields, $filterFields);
+				}
+			}
+
+			foreach ($filterFields as $filterField)
+			{
+				$fieldName = $filterField->getAttribute('name');
+
+				if (array_search($fieldName, $config['filter_fields']) === false)
+				{
+					$config['filter_fields'][] = $fieldName;
+				}
+			}
+		}
+		else
+		{
+			// Set original errors
+			$this->set('_errors', $errors);
 		}
 
-		// Add blacklisted fields if needed
-		foreach ($this->filterBlacklist as $fieldName)
+		// Set grid fields not in filter form as filter fields for sorting
+		foreach (array_keys($this->getGridFields()) as $gridField)
 		{
-			if (array_search($fieldName, $config['filter_fields']) === false)
+			if (!in_array($gridField, $this->filterBlacklist)
+				&& array_search($gridField, $config['filter_fields']) === false)
 			{
-				$config['filter_fields'][] = $fieldName;
+				$config['filter_fields'][] = $gridField;
 			}
+		}
+
+		// Add state filter field at frontend, if not already involved
+		$gridField = 'state';
+
+		if (JFactory::getApplication()->isClient('site')
+			&& array_search($gridField, $config['filter_fields']) === false)
+		{
+			$config['filter_fields'][] = $gridField;
 		}
 
 		parent::__construct($config);
@@ -110,31 +167,50 @@ class GbjSeedModelList extends JModelList
 	protected function populateState($ordering = null, $direction = null)
 	{
 		$app = JFactory::getApplication();
-		$this->setState('list.filter',
-			$this->getUserStateFromRequest(
-				$this->context . '.filter.search',
-				'filter_search',
-				'',
-				'string'
-			)
-		);
-		$this->setFilterState('state');
-		$this->setFilterState('featured');
+		$this->id = $app->input->getInt(Helper::COMMON_URL_VAR_ID);
 
-		// Set filter state for coded fields
-		foreach (array_keys($this->getCodedFields()) as $fieldName)
+		foreach ($this->filter_fields as $filterField)
 		{
-			$this->setFilterState($fieldName, 'uint');
+			switch ($filterField)
+			{
+				case 'search':
+					$this->setState('list.filter',
+						$this->getUserStateFromRequest(
+							$this->context . '.filter.search',
+							'filter_search', '', 'string'
+						)
+					);
+					break;
+
+				case 'state':
+					$this->setFilterState($filterField);
+					break;
+
+				case 'id':
+					$this->setFilterState($filterField, 'uint', $this->id);
+					break;
+
+				// Process fields by an attribute
+				default:
+					if (is_object($this->filterForm))
+					{
+						$dataType = $this->filterForm->getFieldAttribute(
+							$filterField, 'datatype', 'uint', 'filter'
+						);
+					}
+					else
+					{
+						$gridField = $this->gridFields[$filterField];
+						$dataType = $gridField->getAttribute('datatype', 'uint');
+					}
+
+					$this->setFilterState($filterField, $dataType);
+					break;
+			}
 		}
 
-		// Set filter state for id
-		$this->setFilterState(
-			'id',
-			'uint',
-			$this->id = $app->input->getInt(Helper::COMMON_URL_VAR_ID)
-		);
-
 		$this->processParent();
+		$this->setFilterParent();
 
 		// Application params
 		if ($app->isClient('site'))
@@ -144,26 +220,17 @@ class GbjSeedModelList extends JModelList
 		}
 
 		// Default sorting parameters taken from filter form
-		if (is_null($ordering) || is_null($direction))
+		if ((is_null($ordering) || is_null($direction))
+			&& is_object($this->filterForm)
+		)
 		{
-			$errors = $this->getErrors();
-			$filterForm = $this->getFilterForm(null, false);
-
-			if ($filterForm === false)
-			{
-				// Set original errors
-				$this->set('_errors', $errors);
-			}
-			else
-			{
-				$fullordering = $filterForm->getFieldAttribute(
-					'fullordering',
-					'default',
-					null,
-					'list'
-				);
-				list($ordering, $direction) = explode(' ', $fullordering ?? 'title ASC');
-			}
+			$fullordering = $this->filterForm->getFieldAttribute(
+				'fullordering',
+				'default',
+				null,
+				'list'
+			);
+			list($ordering, $direction) = explode(' ', $fullordering ?? 'title ASC');
 		}
 
 		parent::populateState($ordering, $direction);
@@ -172,66 +239,18 @@ class GbjSeedModelList extends JModelList
 	/**
 	 * Retrieve list of records from database.
 	 *
-	 * @return  object  The query for domains.
+	 * @return  object  The query.
 	 */
 	protected function getListQuery()
 	{
 		$app = JFactory::getApplication();
 		$db	= $this->getDbo();
 		$tableName = $this->getTable()->getTableName();
-
 		$query = $db->getQuery(true)
 			->select('a.*')
 			->from($db->quoteName($tableName, 'a'));
-
 		$query = $this->extendQuery($query);
-
-		// Filter by state
-		$state = $this->getState('filter.state');
-
-		if ($state === '')
-		{
-			if ($app->isClient('site'))
-			{
-				$query->where($db->quoteName('state') . '=' . Helper::COMMON_STATE_PUBLISHED);
-			}
-			else
-			{
-				$query->where(
-					'(' . $db->quoteName('state') . ' IN ('
-					. (int) Helper::COMMON_STATE_UNPUBLISHED . ', '
-					. (int) Helper::COMMON_STATE_PUBLISHED
-					. '))'
-				);
-			}
-		}
-		else
-		{
-			$this->setFilterQueryNumeric('state', $query);
-		}
-
-		// Filter by featured
-		$this->setFilterQueryNumeric('featured', $query);
-
-		// Filter by coded fields
-		foreach ($this->getCodedFields() as $fieldName => $fieldForms)
-		{
-			$this->setFilterQueryNumeric($fieldName, $query, $fieldForms['column']);
-		}
-
-		// Filter by site id
-		if ($app->isClient('site'))
-		{
-			$this->setFilterQueryNumeric('id', $query);
-		}
-
-		// Determine search
-		$searchClause = $this->getSearchWhereClause($db, $this->getState('list.filter'));
-
-		if (!empty($searchClause))
-		{
-			$query->where($searchClause);
-		}
+		$query = $this->processQueryFilter($query);
 
 		// Determine ordering parameters
 		$orderCol = $db->escape($this->state->get('list.ordering'));
@@ -239,6 +258,12 @@ class GbjSeedModelList extends JModelList
 
 		if (!empty($orderCol) && !empty($orderDirn))
 		{
+			if (array_key_exists($orderCol, $this->gridFields))
+			{
+				$gridField = $this->gridFields[$orderCol];
+				$orderCol = $gridField->getAttribute('datafield', $orderCol);
+			}
+
 			$fullordering = $orderCol . ' ' . $orderDirn;
 			$query->order(trim($fullordering));
 		}
@@ -249,7 +274,7 @@ class GbjSeedModelList extends JModelList
 	/**
 	 * Extend and amend input query with sub queries, etc.
 	 *
-	 * @param   object  $query   Query to be extended inserted by reference.
+	 * @param   object  $query   Query to be extended.
 	 *
 	 * @return  void  The extended query for chaining.
 	 */
@@ -259,28 +284,35 @@ class GbjSeedModelList extends JModelList
 		$aliasNum = 0;
 
 		// Coded fields
-		foreach ($this->getCodedFields() as $fieldForms)
+		foreach ($this->getCodedFields() as $columnName => $fieldForms)
 		{
-			$alias = chr(ord('a') + ++$aliasNum);
-			$columnName = $fieldForms['column'];
-			$codebookField = $fieldForms['root'];
-			$auxFields = explode(' ', trim($fieldForms['auxfields']));
-			$select = array();
+			$codebookFieldType = $fieldForms['root'];
+			$table = Helper::getCodebookTable($codebookFieldType);
 
-			// Compose fields for query
-			foreach ($auxFields as $field)
+			if (!is_null($table))
 			{
-				$select[] = $db->quoteName(
-					$alias . '.' . $field,
-					$columnName . '_' . $field
-				);
-			}
+				$alias = chr(ord('a') + ++$aliasNum);
+				$select = array();
 
-			$query
-				->select($select)
-				->leftjoin($db->quoteName(Helper::getCodebookTable($codebookField), $alias)
-					. ' ON ' . $alias . '.id = a.' . $columnName
-				);
+				// Compose fields for query
+				if (array_key_exists('auxfields', $fieldForms))
+				{
+					foreach ($fieldForms['auxfields'] as $fieldName)
+					{
+						$codebookFieldName = preg_replace('/^' . $columnName . '_/',
+							'',	$fieldName,	1
+						);
+						$select[] = $db->quoteName($alias . '.' . $codebookFieldName, $fieldName);
+					}
+				}
+
+				// Join codebook table
+				$query
+					->select($select)
+					->leftjoin($db->quoteName($table, $alias)
+						. ' ON ' . $alias . '.id = a.' . $columnName
+					);
+			}
 		}
 
 		// Wrap query
@@ -320,6 +352,13 @@ class GbjSeedModelList extends JModelList
 
 		// Check if the searching is needed
 		if (strlen($searchParams['value']) == 0 && strlen($searchParams['limit']) == 0)
+		{
+			return null;
+		}
+
+		$dateNull = $this->getDbo()->getNullDate();
+
+		if ($searchParams['value'] == $dateNull && $searchParams['limit'] == $dateNull)
 		{
 			return null;
 		}
@@ -570,14 +609,20 @@ class GbjSeedModelList extends JModelList
 
 		foreach ($this->getGridFields() as $fieldName => $fieldObject)
 		{
-			if (substr($fieldName, 0, 3) == Helper::COMMON_FIELD_CODED_PREFIX)
+			if (Helper::isCodedField($fieldName))
 			{
-				$columnName = $this->getCodedColumn($fieldName);
-				$rootName = $this->getCodedRoot($columnName);
-				$this->codedFields[$fieldName]['column'] = $columnName;
-				$this->codedFields[$fieldName]['root'] = $rootName;
-				$this->codedFields[$fieldName]['auxfields'] = 'title alias '
-					. $fieldObject->getAttribute('auxfields');
+				$this->codedFields[$fieldName]['root'] = Helper::getCodedRoot($fieldName);
+				$auxFieldsAttribs = array('datafield', 'tooltip');
+
+				foreach ($auxFieldsAttribs as $fieldAttr)
+				{
+					$auxField = $fieldObject->getAttribute($fieldAttr);
+
+					if (isset($auxField))
+					{
+						$this->codedFields[$fieldName]['auxfields'][] = $auxField;
+					}
+				}
 			}
 		}
 
@@ -589,7 +634,7 @@ class GbjSeedModelList extends JModelList
 	 *
 	 * @return  void
 	 */
-	public function processParent()
+	protected function processParent()
 	{
 		$app = JFactory::getApplication();
 		$parentAgenda = $this->getName();
@@ -620,7 +665,6 @@ class GbjSeedModelList extends JModelList
 			$this->parent = $parentRef->{Helper::COMMON_PARENT_IDENTITY_RECORD};
 			$this->parentType = $parentRef->{Helper::COMMON_PARENT_IDENTITY_TYPE};
 			$this->parentId = $this->parent->id;
-			$this->setState('filter.' . $this->parentType, $this->parentId);
 
 			return;
 		}
@@ -658,13 +702,6 @@ class GbjSeedModelList extends JModelList
 		$parentRef->{Helper::COMMON_PARENT_IDENTITY_TYPE} = $this->parentType;
 		Helper::setParentRef($parentAgenda, $parentRef);
 		$this->grandparent = Helper::getParentRefParentRecord($parentAgenda);
-
-		// Set filter for a parent record
-		$this->setFilterState(
-			$this->parentType,
-			'uint',
-			$this->parentId
-		);
 	}
 
 	/**
@@ -672,7 +709,7 @@ class GbjSeedModelList extends JModelList
 	 *
 	 * @return  void
 	 */
-	public function resetParent()
+	protected function resetParent()
 	{
 		Helper::delParentRef($this->getName());
 		$this->parentId = null;
@@ -699,53 +736,6 @@ class GbjSeedModelList extends JModelList
 	}
 
 	/**
-	 * Determine corresponding table column name for a field name.
-	 *
-	 * @param   string   $fieldName   Field name.
-	 *
-	 * @return  string|null   Column name or null.
-	 */
-	protected function getCodedColumn($fieldName)
-	{
-		$tableFields = $this->getTable()->getFields();
-
-		foreach (array_keys($tableFields) as $columnName)
-		{
-			/*
-			 * Coded column starts with dedicated prefix and field name
-			 * starts with that column name.
-			 */
-			if (preg_match('/^' . Helper::COMMON_FIELD_CODED_PREFIX . '/', $columnName)
-				&& preg_match('/^' . $columnName . '_?/', $fieldName))
-			{
-				return $columnName;
-			}
-		}
-
-		return null;
-
-	}
-
-	/**
-	 * Determine corresponding code table root name for a column name.
-	 *
-	 * @param   string   $columnName   Table column name of a field name.
-	 *
-	 * @return  string   Code table root name.
-	 */
-	protected function getCodedRoot($columnName)
-	{
-		$root = preg_replace(
-			'/^' . Helper::COMMON_FIELD_CODED_PREFIX . '/',
-			'',
-			$columnName,
-			1
-		);
-
-		return $root;
-	}
-
-	/**
 	 * Set filter state to the model state.
 	 *
 	 * @param   string   $fieldName     Name of filtered field.
@@ -760,14 +750,23 @@ class GbjSeedModelList extends JModelList
 		$fieldDefault = ''
 	)
 	{
-		$this->setState('filter.' . $fieldName,
-			$this->getUserStateFromRequest(
-				$this->context . '.filter.' . $fieldName,
-				'filter_' . $fieldName,
-				$fieldDefault,
-				$fieldType
-			)
+		$fieldValue = $this->getUserStateFromRequest(
+			$this->context . '.filter.' . $fieldName,
+			'filter_' . $fieldName,
+			$fieldDefault,
+			$fieldType
 		);
+
+		// Do not save state for multiple filtered field without parent
+		if (!is_object($this->parent)
+			&& is_object($this->filterForm)
+			&& strtoupper($this->filterForm->getFieldAttribute($fieldName, 'multiple', 'FALSE', 'filter')) === 'TRUE'
+		)
+		{
+			return;
+		}
+
+		$this->setState('filter.' . $fieldName, $fieldValue);
 	}
 
 	/**
@@ -787,9 +786,14 @@ class GbjSeedModelList extends JModelList
 
 		if (is_numeric($fieldValue))
 		{
-			$query->where('(' . $db->quoteName($columnName)
-				. ' = ' . (int) $fieldValue . ')'
+			$query->where('(' . $db->quoteName($columnName) . ' = ' . (int) $fieldValue . ')'
 			);
+		}
+		elseif (is_array($fieldValue))
+		{
+			$fieldValue = ArrayHelper::toInteger($fieldValue);
+			$fieldValue = implode(',', $fieldValue);
+			$query->where('(' . $db->quoteName($columnName)	. ' IN (' . $fieldValue . '))');
 		}
 
 		return $query;
@@ -814,18 +818,527 @@ class GbjSeedModelList extends JModelList
 		{
 			switch ($fieldValue)
 			{
-				// Without codes
+				// Without items
 				case '0':
-					$query->where('(' . $db->quoteName($columnName) . ' = 0)');
+					$query->where('(COALESCE(' . $db->quoteName($columnName) . ',0)=0)');
 					break;
 
-				// With some codes
+				// With some items
 				case '1':
-					$query->where('(' . $db->quoteName($columnName) . ' > 0)');
+					$query->where('(' . $db->quoteName($columnName) . '>0)');
 					break;
 			}
 		}
 
 		return $query;
+	}
+
+	/**
+	 * Set filter for a year field to the model query.
+	 *
+	 * @param   string   $fieldName    Name of filtered field.
+	 * @param   object   $query		   Model query object for enrichment.
+	 * @param   string   $columnName   Column name if different from field name.
+	 *
+	 * @return   object  Query object for chaining.
+	 */
+	protected function setFilterQueryYear($fieldName, $query, $columnName = null)
+	{
+		$db = $this->getDbo();
+		$fieldValue = $this->getState('filter.' . $fieldName);
+		$columnName = $columnName ?? $fieldName;
+
+		if (is_numeric($fieldValue))
+		{
+			$query->where('(YEAR(' . $db->quoteName($columnName) . ') = ' . (int) $fieldValue . ')'
+			);
+		}
+		elseif (is_array($fieldValue))
+		{
+			$fieldValue = ArrayHelper::toInteger($fieldValue);
+			$fieldValue = implode(',', $fieldValue);
+			$query->where('(YEAR(' . $db->quoteName($columnName) . ') IN (' . $fieldValue . '))');
+		}
+
+		return $query;
+	}
+
+	/**
+	 * Set filter for a month field to the model query.
+	 *
+	 * @param   string   $fieldName    Name of filtered field.
+	 * @param   object   $query		   Model query object for enrichment.
+	 * @param   string   $columnName   Column name if different from field name.
+	 *
+	 * @return   object  Query object for chaining.
+	 */
+	protected function setFilterQueryMonth($fieldName, $query, $columnName = null)
+	{
+		$db = $this->getDbo();
+		$fieldValue = $this->getState('filter.' . $fieldName);
+		$columnName = $columnName ?? $fieldName;
+
+		if (is_numeric($fieldValue))
+		{
+			$query->where('(MONTH(' . $db->quoteName($columnName) . ') = ' . (int) $fieldValue . ')'
+			);
+		}
+		elseif (is_array($fieldValue))
+		{
+			$fieldValue = ArrayHelper::toInteger($fieldValue);
+			$fieldValue = implode(',', $fieldValue);
+			$query->where('(MONTH(' . $db->quoteName($columnName) . ') IN (' . $fieldValue . '))');
+		}
+
+		return $query;
+	}
+
+	/**
+	 * Set filter for a parent field
+	 *
+	 * @return   void
+	 */
+	protected function setFilterParent()
+	{
+		if (is_object($this->parent))
+		{
+			$parentFilterField = Helper::getCodedField($this->parentType);
+			$this->setFilterState($parentFilterField, 'uint', $this->parentId);
+			$this->filterBlacklist[] = $parentFilterField;
+		}
+	}
+
+	/**
+	 * Format numeric statistics value and add it to the provided array
+	 * for web site one record statistics.
+	 *
+	 * @param   array   $statArray    List of statistics key-value pairs.
+	 * @param   number  $statValue    Statistics numeric value.
+	 * @param   number  $statLabel    Name of a statistic value.
+	 * @param   number  $statMeasure  Name of a record field.
+	 * @param   number  $statUnit     Optional measurement unit of a statistics.
+	 * @param   string  $statFormat   List of formatting parameters separated
+	 *                                by semicolon in default:
+	 *                                number of decimals, decimal separator,
+	 *                                thousands separator
+	 *
+	 * @return  void
+	 */
+	public function addStatisticsNumber(& $statArray, $statValue,
+		$statLabel, $statMeasure, $statUnit = null, $statFormat=null
+	)
+	{
+		$label = JText::sprintf('LIB_GBJ_STAT_VALUE_TITLE', $statMeasure, $statLabel);
+		$statArray[$label] = JText::sprintf('LIB_GBJ_STAT_VALUE_UNIT',
+			Helper::formatNumber($statValue, $statFormat),
+			$statUnit
+		);
+	}
+
+	/**
+	 * Format date statistics value and add it to the provided array
+	 * for web site one record statistics.
+	 *
+	 * @param   array   $statArray    List of statistics key-value pairs.
+	 * @param   number  $statValue    Statistics numeric value.
+	 * @param   number  $statMeasure  Name of a record field.
+	 *
+	 * @return  void
+	 */
+	public function addStatisticsDate(& $statArray, $statValue, $statMeasure)
+	{
+		$value = JHtml::_('date', $statValue, JText::_('LIB_GBJ_FORMAT_DATE_LONG'));
+		$statArray[$statMeasure] = $value;
+	}
+
+	/**
+	 * Get the filter form
+	 *
+	 * @param   array    $data      data
+	 * @param   boolean  $loadData  load current data
+	 *
+	 * @return  \JForm|boolean  The \JForm object or false on error
+	 *
+	 * @since   3.2
+	 */
+	public function getFilterForm($data = array(), $loadData = true)
+	{
+		$form = parent::getFilterForm($data, $loadData);
+
+		if (!is_object($form))
+		{
+			return $form;
+		}
+
+		$filterFields = $this->getFilterFormFields($form, $loadData);
+
+		// Rewrite fields
+		if (array_key_exists(Helper::COMMON_TABLE_PREFIX, $filterFields)
+			&& $filterFields[Helper::COMMON_TABLE_PREFIX] === true)
+		{
+			foreach ($form->getGroup(self::FILTER_FIELDS_GROUP) as $fieldObject)
+			{
+				$form->removeField($fieldObject->getAttribute('name'), self::FILTER_FIELDS_GROUP);
+			}
+
+			foreach ($filterFields as $name => $filterFieldArr)
+			{
+				if ($name == Helper::COMMON_TABLE_PREFIX)
+				{
+					continue;
+				}
+
+				$form->setField($filterFieldArr['xml'], self::FILTER_FIELDS_GROUP);
+				$form->setValue($name, self::FILTER_FIELDS_GROUP, $filterFieldArr['val']);
+			}
+		}
+
+		return $form;
+	}
+
+	/**
+	 * Get the filter form fields recursively
+	 *
+	 * @param   object   $form      Filter form
+	 * @param   boolean  $loadData  Load current data
+	 *
+	 * @return  Array with filter form fields with resolved subforms
+	 *
+	 * @since   3.2
+	 */
+	private function getFilterFormFields($form, $loadData = true)
+	{
+		$filterFields = array();
+
+		foreach ($form->getGroup(self::FILTER_FIELDS_GROUP) as $fieldName => $fieldObject)
+		{
+			$name = $fieldObject->getAttribute('name');
+
+			if ($fieldObject->getAttribute('type') == 'subform')
+			{
+				$source = $fieldObject->getAttribute('formsource')
+					?? Helper::getLibraryDir(true)
+					. DIRECTORY_SEPARATOR
+					. Helper::COMMON_FORM_BASEDIR
+					. DIRECTORY_SEPARATOR
+					. $fieldName
+					. '.xml';
+				$formOptions['load_data'] = $loadData;
+				$subform = $this->loadForm($fieldName, $source, $formOptions);
+				$filterFields = array_merge(
+					$filterFields,
+					$this->getFilterFormFields($subform, $loadData)
+				);
+				$filterFields[Helper::COMMON_TABLE_PREFIX] = true;
+			}
+			else
+			{
+				$filterFields[$name]['xml'] = $form->getFieldXml($name, self::FILTER_FIELDS_GROUP);
+				$filterFields[$name]['val'] = $form->getValue($name, self::FILTER_FIELDS_GROUP);
+			}
+		}
+
+		return $filterFields;
+	}
+
+	/**
+	 * Process filtering in behalf of input query.
+	 *
+	 * @param   object  $query   Query to be processed.
+	 *
+	 * @return  object  The query for domains.
+	 */
+	protected function processQueryFilter($query)
+	{
+		$app = JFactory::getApplication();
+		$db	= $this->getDbo();
+
+		foreach ($this->filter_fields as $filterField)
+		{
+			switch ($filterField)
+			{
+				case 'search':
+					$searchClause = $this->getSearchWhereClause($db, $this->getState('list.filter'));
+
+					if (!empty($searchClause))
+					{
+						$query->where($searchClause);
+					}
+
+					break;
+
+				case 'state':
+					// Ignore state at individual record mode
+					if (is_int($this->getState('filter.id')))
+					{
+						break;
+					}
+
+					$state = $this->getState('filter.' . $filterField);
+
+					if ($state === '')
+					{
+						// Default filtering
+						if ($app->isClient('site'))
+						{
+							$query->where($db->quoteName($filterField) . '=' . Helper::COMMON_STATE_PUBLISHED);
+						}
+						else
+						{
+							$query->where(
+								'(' . $db->quoteName($filterField) . ' IN ('
+								. (int) Helper::COMMON_STATE_UNPUBLISHED . ', '
+								. (int) Helper::COMMON_STATE_PUBLISHED
+								. '))'
+							);
+						}
+					}
+					elseif ($state === Helper::COMMON_STATE_ALL && $app->isClient('site'))
+					{
+						$query->where(
+							'(' . $db->quoteName($filterField) . ' IN ('
+							. (int) Helper::COMMON_STATE_ARCHIVED . ', '
+							. (int) Helper::COMMON_STATE_PUBLISHED
+							. '))'
+						);
+					}
+					else
+					{
+						$this->setFilterQueryNumeric($filterField, $query);
+					}
+
+					break;
+
+				case 'year':
+					if (is_object($this->filterForm))
+					{
+						$dataField = $this->filterForm->getFieldAttribute(
+							$filterField, 'datafield', 'date_on', 'filter'
+						);
+					}
+					else
+					{
+						$gridField = $this->gridFields[$filterField];
+						$dataField = $gridField->getAttribute('datafield', 'date_on');
+					}
+
+					$this->setFilterQueryYear($filterField, $query, $dataField);
+					break;
+
+				case 'month':
+					if (is_object($this->filterForm))
+					{
+						$dataField = $this->filterForm->getFieldAttribute(
+							$filterField, 'datafield', 'date_on', 'filter'
+						);
+					}
+					else
+					{
+						$gridField = $this->gridFields[$filterField];
+						$dataField = $gridField->getAttribute('datafield', 'date_on');
+					}
+
+					$this->setFilterQueryMonth($filterField, $query, $dataField);
+					break;
+
+				case 'yearoff':
+					if (is_object($this->filterForm))
+					{
+						$dataField = $this->filterForm->getFieldAttribute(
+							$filterField, 'datafield', 'date_off', 'filter'
+						);
+					}
+					else
+					{
+						$gridField = $this->gridFields[$filterField];
+						$dataField = $gridField->getAttribute('datafield', 'date_off');
+					}
+
+					$this->setFilterQueryYear($filterField, $query, $dataField);
+					break;
+
+				case 'monthoff':
+					if (is_object($this->filterForm))
+					{
+						$dataField = $this->filterForm->getFieldAttribute(
+							$filterField, 'datafield', 'date_off', 'filter'
+						);
+					}
+					else
+					{
+						$gridField = $this->gridFields[$filterField];
+						$dataField = $gridField->getAttribute('datafield', 'date_off');
+					}
+
+					$this->setFilterQueryMonth($filterField, $query, $dataField);
+					break;
+
+				// Process fields by an attribute
+				default:
+					if (is_object($this->filterForm))
+					{
+						$dataMode = $this->filterForm->getFieldAttribute(
+							$filterField, 'datamode', 'value', 'filter'
+						);
+					}
+					else
+					{
+						$gridField = $this->gridFields[$filterField];
+						$dataMode = $gridField->getAttribute('datamode', 'value');
+					}
+
+					switch ($dataMode)
+					{
+						case 'binary':
+							$this->setFilterQuerySome($filterField, $query);
+							break;
+
+						default:
+							$this->setFilterQueryNumeric($filterField, $query);
+							break;
+					}
+
+					break;
+			}
+		}
+
+		return $query;
+	}
+
+	/**
+	 * Calculates statistics from filtered records.
+	 *
+	 * @param   array   $fieldList   List of individual fields or pairs of them
+	 *                               separated by comma for statistical evaluation.
+	 *
+	 * @return  array  The list of statistics variables and values.
+	 */
+	public function getFilterStatistics($fieldList = array())
+	{
+		$statistics = array();
+		$statList = array('cnt', 'sum', 'avg', 'min', 'max');
+
+		$db	= $this->getDbo();
+		$tableName = $this->getTable()->getTableName();
+		$query = $db->getQuery(true)
+			->from($db->quoteName($tableName, 'a'));
+		$query = $this->processQueryFilter($query);
+
+		foreach ($fieldList as $field)
+		{
+			$fields = explode(',', $field);
+			$fieldName = trim($fields[0]);
+			$fieldExpr = $fieldName;
+
+			if (isset($fields[1]))
+			{
+				$fieldAlt = trim($fields[1]);
+				$fieldExpr = 'IFNULL(' . $fieldExpr . ',' . $fieldAlt . ')';
+			}
+
+			$query
+				->select('COUNT(' . $fieldExpr . ') AS cnt_' . $fieldName)
+				->select('SUM(' . $fieldExpr . ') AS sum_' . $fieldName)
+				->select('AVG(' . $fieldExpr . ') AS avg_' . $fieldName)
+				->select('MIN(' . $fieldExpr . ') AS min_' . $fieldName)
+				->select('MAX(' . $fieldExpr . ') AS max_' . $fieldName);
+		}
+
+		try
+		{
+			$db->setQuery($query);
+			$statRecord = $db->loadAssoc();
+		}
+		catch (\RuntimeException $e)
+		{
+			$this->setError($e->getMessage());
+
+			return $statistics;
+		}
+
+		foreach ($fieldList as $field)
+		{
+			$fields = explode(',', $field);
+			$fieldName = trim($fields[0]);
+
+			foreach ($statList as $statVar)
+			{
+				$statistics[$fieldName][$statVar] = $statRecord[$statVar . '_' . $fieldName] ?? 0;
+			}
+		}
+
+		return $statistics;
+	}
+
+	/**
+	 * Calculates statistics from filtered records.
+	 *
+	 * @param   string   $agenda        Child agenda table base name
+	 * @param   string   $fieldParent   Parent discriminator field name
+	 * @param   array    $fieldList     List of individual fields or pairs of them
+	 *                                  separated by comma for statistical evaluation
+	 *
+	 * @return  array  The list of agenda statistics variables and values.
+	 */
+	public function getFilterStatisticsChild($agenda, $fieldParent, $fieldList = array())
+	{
+		$statistics = array();
+		$statList = array('cnt', 'sum', 'avg', 'min', 'max');
+
+		$db	= $this->getDbo();
+		$tableName = Helper::getTableName($agenda);
+		$query = $db->getQuery(true)
+			->from($db->quoteName($tableName, 'a'));
+		$query = $this->processQueryFilter($query);
+		$query
+			->where('(' . $db->quoteName($fieldParent) . '>0)')
+			->select('COUNT(*) AS total');
+
+		foreach ($fieldList as $field)
+		{
+			$fields = explode(',', $field);
+			$fieldName = trim($fields[0]);
+			$fieldExpr = $fieldName;
+
+			if (isset($fields[1]))
+			{
+				$fieldAlt = trim($fields[1]);
+				$fieldExpr = 'IFNULL(' . $fieldExpr . ',' . $fieldAlt . ')';
+			}
+
+			$query
+				->select('COUNT(' . $fieldExpr . ') AS cnt_' . $fieldName)
+				->select('SUM(' . $fieldExpr . ') AS sum_' . $fieldName)
+				->select('AVG(' . $fieldExpr . ') AS avg_' . $fieldName)
+				->select('MIN(' . $fieldExpr . ') AS min_' . $fieldName)
+				->select('MAX(' . $fieldExpr . ') AS max_' . $fieldName);
+		}
+
+		try
+		{
+			$db->setQuery($query);
+			$statRecord = $db->loadAssoc();
+		}
+		catch (\RuntimeException $e)
+		{
+			$this->setError($e->getMessage());
+
+			return $statistics;
+		}
+
+		foreach ($fieldList as $field)
+		{
+			$fields = explode(',', $field);
+			$fieldName = trim($fields[0]);
+
+			foreach ($statList as $statVar)
+			{
+				$statistics[$agenda][$fieldName][$statVar] = $statRecord[$statVar . '_' . $fieldName] ?? 0;
+			}
+		}
+
+		$statistics[$agenda]['#'] = $statRecord['total'] ?? 0;
+
+		return $statistics;
 	}
 }

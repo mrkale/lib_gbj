@@ -1,9 +1,9 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj. All rights reserved.
- * @license    GNU General Public License version 2 or later. See LICENSE.txt, LICENSE.php.
- * @since      3.7
+ * @copyright  (c) 2017-2019 Libor Gabaj
+ * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * @since      3.8
  */
 
 // No direct access
@@ -14,13 +14,15 @@ use Joomla\String\Normalise;
 /**
  * General table methods for all extension's tables
  *
- * @since  3.7
+ * @since  3.8
  */
 class GbjSeedTable extends JTable
 {
 	/**
 	 * @var   array	 List of error messages language constants for checking.
-	 *				 The key is usually a checked field name.
+	 *				 The key is usually a checked field name or concatenation
+	 *				 of more fields with dot.
+	 * .
 	 */
 	protected $errorMsgs = array();
 
@@ -30,6 +32,13 @@ class GbjSeedTable extends JTable
 	 * @var boolean
 	 */
 	protected $checkFlag = true;
+
+	/**
+	 * The flag determining raising warning instead of default error.
+	 *
+	 * @var boolean
+	 */
+	protected $checkWarning = false;
 
 	/**
 	 * Object constructor to set table and key fields.
@@ -52,6 +61,8 @@ class GbjSeedTable extends JTable
 
 	/**
 	 * Method to get the database table name for the class.
+	 *
+	 * @param   string $parentField  The name of a parent field.
 	 *
 	 * @return  string  The name of the database table being modeled.
 	 *
@@ -143,8 +154,11 @@ class GbjSeedTable extends JTable
 	 */
 	public function check()
 	{
-		$this->checkTitle();
+		$this->checkTitleDate();
 		$this->checkAlias();
+		$this->checkDate('date_on');
+		$this->checkDate('date_off');
+		$this->checkDatesReverse();
 
 		// Result
 		if ($this->checkFlag)
@@ -156,6 +170,48 @@ class GbjSeedTable extends JTable
 			$this->setError(JText::_('LIB_GBJ_ERROR_FORM_FIELDS'));
 
 			return $this->checkFlag;
+		}
+	}
+
+	/**
+	 * Raise error of warning.
+	 *
+	 * At finish the warning flag and internally set exception message are reset.
+	 *
+	 * @param   string $errorIdx    The index to the list of error messages.
+	 *							    Usually a name of a field or concatenated fields
+	 *                              to be checked.
+	 * @param   string $errorLang   The language constant for an exception message.
+	 *							    Usually a name of a field or concatenated fields
+	 *                              to be checked.
+	 *
+	 * @return void
+	 */
+	private function raiseError($errorIdx, $errorLang)
+	{
+		$resetMsg = false;
+
+		if (!isset($this->errorMsgs[$errorIdx]) || empty($this->errorMsgs[$errorIdx]))
+		{
+			$resetMsg = true;
+			$this->errorMsgs[$errorIdx] = $errorLang;
+		}
+
+		if (!$this->checkWarning)
+		{
+			$this->checkFlag = false;
+		}
+
+		$errorType = $this->checkWarning ? 'warning' : 'error';
+		$this->checkWarning = false;
+		JFactory::getApplication()->enqueueMessage(JText::_($this->errorMsgs[$errorIdx]), $errorType);
+
+		// Reset
+		$this->checkWarning = false;
+
+		if ($resetMsg)
+		{
+			$this->errorMsgs[$errorIdx] = null;
 		}
 	}
 
@@ -184,13 +240,47 @@ class GbjSeedTable extends JTable
 			&& ($table->$primaryKeyName != $this->$primaryKeyName
 			|| $this->$primaryKeyName == 0)))
 		{
-			if (!isset($this->errorMsgs[$fieldName]) || empty($this->errorMsgs[$fieldName]))
-			{
-				$this->errorMsgs[$fieldName] = 'LIB_GBJ_ERROR_UNIQUE_TITLE';
-			}
+			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_UNIQUE_TITLE');
+		}
+	}
 
-			$this->checkFlag = false;
-			JFactory::getApplication()->enqueueMessage(JText::_($this->errorMsgs[$fieldName]), 'error');
+	/**
+	 * Check the validity of the pair of title and date field.
+	 *
+	 * @param   string $fieldTitle  The name of a field with title.
+	 * @param   string $fieldDate   The name of a field with date.
+	 *
+	 * @return void
+	 */
+	protected function checkTitleDate($fieldTitle = 'title', $fieldDate = 'date_on')
+	{
+		// Title field is not used
+		if (!isset($this->$fieldTitle) || empty($this->$fieldTitle))
+		{
+			return;
+		}
+
+		// Date field is not used
+		if (!isset($this->$fieldDate) || empty($this->$fieldDate))
+		{
+			return;
+		}
+
+		// Clone current table object for checking
+		$primaryKeyName = $this->getKeyName();
+		$table = clone $this;
+
+		// Verify that the title with date is unique
+		if ($table->load(array(
+				$fieldTitle => $this->$fieldTitle,
+				$fieldDate => $this->$fieldDate)
+		)
+			&& (isset($primaryKeyName)
+			&& ($table->$primaryKeyName != $this->$primaryKeyName
+			|| $this->$primaryKeyName == 0)))
+		{
+			$fieldName = $fieldTitle . '.' . $fieldDate;
+			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_UNIQUE_TITLEDATE');
 		}
 	}
 
@@ -219,13 +309,7 @@ class GbjSeedTable extends JTable
 			&& ($table->$primaryKeyName != $this->$primaryKeyName
 			|| $this->$primaryKeyName == 0)))
 		{
-			if (!isset($this->errorMsgs[$fieldName]) || empty($this->errorMsgs[$fieldName]))
-			{
-				$this->errorMsgs[$fieldName] = 'LIB_GBJ_ERROR_UNIQUE_ALIAS';
-			}
-
-			$this->checkFlag = false;
-			JFactory::getApplication()->enqueueMessage(JText::_($this->errorMsgs[$fieldName]), 'error');
+			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_UNIQUE_ALIAS');
 		}
 	}
 
@@ -239,7 +323,8 @@ class GbjSeedTable extends JTable
 	protected function checkDate($fieldName)
 	{
 		// Field is not used
-		if (!isset($this->$fieldName) || empty($this->$fieldName))
+		if (!isset($this->$fieldName) || empty($this->$fieldName)
+			|| JFactory::getDate($this->$fieldName)->toUnix() < 0)
 		{
 			return;
 		}
@@ -247,12 +332,117 @@ class GbjSeedTable extends JTable
 		// Warn that the date is in the future
 		if (JFactory::getDate($this->$fieldName)->toSql() > JFactory::getDate()->toSql())
 		{
-			if (!isset($this->errorMsgs[$fieldName]) || empty($this->errorMsgs[$fieldName]))
+			$this->checkWarning = true;
+			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_FUTURE_DATE');
+		}
+	}
+
+	/**
+	 * Check the pair of dates for reverse order.
+	 *
+	 * @param   string $fieldDateOn	   The name of a field with start date.
+	 * @param   string $fieldDateOff   The name of a field with end date.
+	 *
+	 * @return void
+	 */
+	protected function checkDatesReverse($fieldDateOn = 'date_on', $fieldDateOff = 'date_off')
+	{
+		// Date on field is not used
+		if (!isset($this->$fieldDateOn) || empty($this->$fieldDateOn))
+		{
+			return;
+		}
+
+		// Date off field is not used
+		if (!isset($this->$fieldDateOff) || empty($this->$fieldDateOff))
+		{
+			return;
+		}
+
+		// End date is sooner than start date
+		if ($this->$fieldDateOff < $this->$fieldDateOn)
+		{
+			$fieldName = $fieldDateOn . '.' . $fieldDateOff;
+			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_DATEOFF_LESS');
+		}
+	}
+
+	/**
+	 * Check the pair of dates for equality.
+	 *
+	 * @param   string $fieldDateOn	   The name of a field with start date.
+	 * @param   string $fieldDateOff   The name of a field with end date.
+	 *
+	 * @return void
+	 */
+	protected function checkDatesEqual($fieldDateOn = 'date_on', $fieldDateOff = 'date_off')
+	{
+		// Date on field is not used
+		if (!isset($this->$fieldDateOn) || empty($this->$fieldDateOn))
+		{
+			return;
+		}
+
+		// Date off field is not used
+		if (!isset($this->$fieldDateOff) || empty($this->$fieldDateOff))
+		{
+			return;
+		}
+
+		// End date is equal to start date
+		if ($this->$fieldDateOff == $this->$fieldDateOn)
+		{
+			$fieldName = $fieldDateOn . '.' . $fieldDateOff;
+			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_DATEOFF_EQUAL');
+		}
+	}
+
+	/**
+	 * Check the negative price.
+	 *
+	 * @param   string $fieldName  The name of a field to be checked.
+	 *
+	 * @return void
+	 */
+	protected function checkPrice($fieldName)
+	{
+		// Field is not used
+		if (!isset($this->$fieldName) || empty($this->$fieldName))
+		{
+			if (is_string($this->$fieldName))
 			{
-				$this->errorMsgs[$fieldName] = 'LIB_GBJ_ERROR_FUTURE_DATE';
+				$this->$fieldName = null;
 			}
 
-			JFactory::getApplication()->enqueueMessage(JText::_($this->errorMsgs[$fieldName]), 'warning');
+			return;
+		}
+
+		// Price should be positive
+		if ((float) $this->$fieldName < 0)
+		{
+			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_PRICE_FIELD');
+		}
+	}
+
+	/**
+	 * Check the negative quantity.
+	 *
+	 * @param   string $fieldName  The name of a field to be checked.
+	 *
+	 * @return void
+	 */
+	protected function checkQuantity($fieldName)
+	{
+		// Field is not used
+		if (!isset($this->$fieldName) || empty($this->$fieldName))
+		{
+			return;
+		}
+
+		// Price should be positive
+		if ((float) $this->$fieldName < 0)
+		{
+			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_QUANTITY_FIELD');
 		}
 	}
 }

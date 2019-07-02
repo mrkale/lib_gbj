@@ -1,9 +1,9 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj. All rights reserved.
- * @license    GNU General Public License version 2 or later. See LICENSE.txt, LICENSE.php.
- * @since      3.7
+ * @copyright  (c) 2017-2019 Libor Gabaj
+ * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * @since      3.8
  */
 
 // No direct access
@@ -22,7 +22,7 @@ $tparams = $this->params;
 $agenda = $this->getName();
 $viewList = Helper::plural($agenda);
 $pageclass_sfx = htmlspecialchars($tparams->get('pageclass_sfx'));
-$agendaTitle = JText::_(strtoupper($componentName) . '_SUBMENU_' . strtoupper(Helper::plural($agenda)));
+$agendaTitle = JText::_(strtoupper($componentName) . '_' . strtoupper(Helper::plural($agenda)));
 $parentTitle = (is_object($this->model->parent) ? $this->model->parent->title : null);
 $parentPrefix = $this->escape($parentTitle ?? $tparams->get('page_heading') ?? $agendaTitle);
 
@@ -40,11 +40,13 @@ if ($tparams->get('show_pagedescription'))
 			<?php echo $parentPrefix; ?>
 		</a>
 		<?php echo JText::_('LIB_GBJ_TITLE_SEPARATOR'); ?>
-		<?php echo $this->item->title; ?>
+		<?php echo $this->item->title ?? $this->item->date_on; ?>
 	</h1>
 <?php if (!empty($description)): ?>
 	<div>
-		<?php echo $description; ?>
+		<h4>
+			<?php echo $description; ?>
+		</h4>
 	</div>
 <?php endif; ?>
 	<?php echo JHtml::_('bootstrap.startAccordion', 'slide-agenda', array('active' => 'record', 'toggle' => true)); ?>
