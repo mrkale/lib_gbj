@@ -36,7 +36,7 @@ class GbjSeedFieldList extends JFormFieldList
 	public function __construct($form = null)
 	{
 		$parts = explode(' ', Normalise::fromCamelCase(get_called_class()));
-		$this->type = end($parts);
+		$this->type = strtolower(end($parts));
 
 		parent::__construct($form);
 	}
@@ -55,7 +55,7 @@ class GbjSeedFieldList extends JFormFieldList
 
 		switch ($this->type)
 		{
-			case 'Year':
+			case 'year':
 				$table = Helper::getTable($app->input->get('view'));
 				$query
 					->select('DISTINCT YEAR(a.date_on) AS value')
@@ -78,7 +78,7 @@ class GbjSeedFieldList extends JFormFieldList
 				}
 				break;
 
-			case 'Yearoff':
+			case 'yearoff':
 				$table = Helper::getTable($app->input->get('view'));
 				$query
 					->select('DISTINCT YEAR(a.date_off) AS value')
@@ -101,7 +101,7 @@ class GbjSeedFieldList extends JFormFieldList
 				}
 				break;
 
-			case 'Month':
+			case 'month':
 				$table = Helper::getTable($app->input->get('view'));
 				$query
 					->select(array(
@@ -128,7 +128,7 @@ class GbjSeedFieldList extends JFormFieldList
 				}
 				break;
 
-			case 'Monthoff':
+			case 'monthoff':
 				$table = Helper::getTable($app->input->get('view'));
 				$query
 					->select(array(
