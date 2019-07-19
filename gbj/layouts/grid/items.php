@@ -28,7 +28,6 @@ $canChange = $user->authorise('core.edit.state', Helper::getName())
 // Options
 $options = $this->getOptions();
 $fieldList = $options->get('fields');
-$splits = $options->get('splits');
 
 if (is_string($fieldList))
 {
@@ -85,7 +84,9 @@ foreach ($fieldList as $fieldIdx => $fieldName)
 			$gridSuffix = rtrim(Helper::COMMON_HTML_SPACE . $suffixValue);
 		}
 
-		$fieldTags = $displayData->htmlAttribute('class', $field->getAttribute('class'));
+		$fieldTags = '';
+		$fieldTags .= $displayData->htmlAttribute('class', $field->getAttribute('class'));
+		$fieldTags .= $displayData->htmlAttribute('style', $field->getAttribute('style'));
 
 		// XML attribute - Force value from data field
 		$fieldData = $field->getAttribute('datafield');
@@ -294,7 +295,7 @@ foreach ($fieldList as $fieldIdx => $fieldName)
 }
 
 // Prepare data for table
-if ($fieldCount > 1)
+if ($fieldCount)
 {
 	if ($isButtons)
 	{
@@ -309,34 +310,22 @@ if ($fieldCount > 1)
 	}
 	else
 	{
-		$splits = $splits ?? count($renderFields) - 1;
-
 		foreach ($renderFields as $key => $renderField)
 		{
-			if (empty($renderField['data']))
+			if ($key)
 			{
-				$splits--;
-				continue;
+				$tableData .= '<br />';
+			}
+			else
+			{
+				$tableTags = $renderField['tag'];
 			}
 
-			if ($key > 0)
-			{
-				$splitToken = ' ';
-
-				if ($splits)
-				{
-					$splitToken = '<br />';
-					$splits--;
-				}
-
-				$tableData .= $splitToken;
-			}
-
-			$tableData .= '<span' . $renderField['tag'] . '>' . $renderField['data'] . '</span>';
+			$tableData .= $renderField['data'];
 		}
 	}
 }
-elseif ($fieldCount == 1)
+else
 {
 	$tableTags = $renderFields[0]['tag'];
 	$tableData = $renderFields[0]['data'];
@@ -344,5 +333,5 @@ elseif ($fieldCount == 1)
 ?>
 
 <?php if ($fieldCount) : ?>
-<td <?php echo $tableTags; ?>><?php echo $tableData; ?></td>
+<td<?php echo $tableTags; ?>><?php echo $tableData; ?></td>
 <?php endif;

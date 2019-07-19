@@ -786,7 +786,7 @@ class GbjSeedModelList extends JModelList
 
 		if (is_numeric($fieldValue))
 		{
-			$query->where('(' . $db->quoteName($columnName) . ' = ' . (int) $fieldValue . ')'
+			$query->where('(' . $db->quoteName($columnName) . '=' . (int) $fieldValue . ')'
 			);
 		}
 		elseif (is_array($fieldValue))
@@ -850,7 +850,7 @@ class GbjSeedModelList extends JModelList
 
 		if (is_numeric($fieldValue))
 		{
-			$query->where('(YEAR(' . $db->quoteName($columnName) . ') = ' . (int) $fieldValue . ')'
+			$query->where('(YEAR(' . $db->quoteName($columnName) . ')=' . (int) $fieldValue . ')'
 			);
 		}
 		elseif (is_array($fieldValue))
@@ -880,7 +880,7 @@ class GbjSeedModelList extends JModelList
 
 		if (is_numeric($fieldValue))
 		{
-			$query->where('(MONTH(' . $db->quoteName($columnName) . ') = ' . (int) $fieldValue . ')'
+			$query->where('(MONTH(' . $db->quoteName($columnName) . ')=' . (int) $fieldValue . ')'
 			);
 		}
 		elseif (is_array($fieldValue))

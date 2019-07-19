@@ -37,8 +37,10 @@ foreach ($fieldList as $fieldName)
 		// XML attribute - flag about sorting a grid column - default TRUE
 		$gridSort = strtoupper($field->getAttribute('sorted') ?? 'TRUE') !== 'FALSE';
 
-		$fieldTags  = $displayData->htmlAttribute('class', $field->getAttribute('labelclass'));
+		$fieldTags  = '';
+		$fieldTags .= $displayData->htmlAttribute('class', $field->getAttribute('labelclass'));
 		$fieldTags .= $displayData->htmlAttribute('width', $field->getAttribute('width'));
+		$fieldTags .= $displayData->htmlAttribute('style', $field->getAttribute('style'));
 
 		if ($field->getAttribute('type') === 'checkbox')
 		{
@@ -70,24 +72,27 @@ foreach ($fieldList as $fieldName)
 }
 
 // Prepare data for table
-if ($fieldCount > 1)
+if ($fieldCount)
 {
 	foreach ($renderFields as $key => $renderField)
 	{
-		if ($key > 0)
+		if ($key)
 		{
 			$tableData .= '<br />';
 		}
+		else
+		{
+			$tableTags = $renderField['tag'];
+		}
 
-		$tableData .= '<span' . $renderField['tag'] . '>' . $renderField['data'] . '</span>';
+		$tableData .= $renderField['data'];
 	}
 }
-elseif ($fieldCount == 1)
+else
 {
+	$tableTags = $renderFields[0]['tag'];
 	$tableData = $renderFields[0]['data'];
 }
-
-$tableTags = $renderFields[0]['tag'];
 ?>
 
 <?php if ($fieldCount) : ?>
