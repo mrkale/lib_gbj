@@ -85,7 +85,7 @@ if ($fieldCount)
 			$tableTags = $renderField['tag'];
 		}
 
-		$tableData .= $renderField['data'];
+		$tableData .= trim($renderField['data']);
 	}
 }
 else
