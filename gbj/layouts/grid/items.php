@@ -186,7 +186,11 @@ foreach ($fieldList as $fieldIdx => $fieldName)
 					break;
 
 				case 'number':
-					if (!is_null($gridFormat))
+					if (is_null($gridFormat))
+					{
+						$variantFieldValue = floatval($variantFieldValue);
+					}
+					else
 					{
 						$variantFieldValue = Helper::formatNumber(
 							$variantFieldValue,

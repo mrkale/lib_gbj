@@ -119,7 +119,11 @@ if (!$disabled)
 			break;
 
 		case 'number':
-			if (!is_null($gridFormat))
+			if (is_null($gridFormat))
+			{
+				$field_value = floatval($field_value);
+			}
+			else
 			{
 				$field_value = Helper::formatNumber(
 					$field_value,
