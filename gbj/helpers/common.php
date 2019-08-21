@@ -1022,4 +1022,18 @@ class GbjHelpersCommon
 
 		return $period;
 	}
+
+	/**
+	 * Check if a date is empty of zeroed.
+	 *
+	 * @param   date   $dateValue   Date value.
+	 *
+	 * @return  boolean  Flag about empty date.
+	 */
+	public static function isEmptyDate($dateValue)
+	{
+		$dateNull = JFactory::getDbo()->getNullDate();
+		return empty($dateValue) || $dateValue == $dateNull
+			|| JFactory::getDate($dateValue)->toUnix() < 0;
+	}
 }

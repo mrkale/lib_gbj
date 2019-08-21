@@ -210,8 +210,10 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 			{
 				if ($this->isXmlRequired($fieldName))
 				{
-					$title = $record->title ?? $this->getNewTitle();
+					$default = $this->getXmlDefault($fieldName);
+					$title = $record->alias ?? $default ?? $record->title;
 					$record->$fieldName = JFilterOutput::stringURLSafe($title);
+					;
 				}
 			}
 
@@ -428,7 +430,7 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 		}
 		catch (RuntimeException $e)
 		{
-			$app->enqueueMessage($e->getMessage(), 'error');
+			JFactory::getApplication()->enqueueMessage($e->getMessage(), 'error');
 		}
 
 		return $result;
@@ -503,6 +505,38 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 			->getAttribute('required', 'false');
 
 		return filter_var($required, FILTER_VALIDATE_BOOLEAN);
+	}
+
+	/**
+	 * Extract default text from the form field in the XML form.
+	 *
+	 * @param   string   $fieldName   The name of a form field.
+	 *
+	 * @return string   String (including empty) from default in the form.
+	 */
+	protected function getXmlDefault($fieldName)
+	{
+		$default = $this->getForm(null, false)
+			->getField($fieldName)
+			->getAttribute('default');
+
+		return $default;
+	}
+
+	/**
+	 * Extract hint text from the form field in the XML form.
+	 *
+	 * @param   string   $fieldName   The name of a form field.
+	 *
+	 * @return string   String (including empty) from hint in the form.
+	 */
+	protected function getXmlHint($fieldName)
+	{
+		$hint = $this->getForm(null, false)
+			->getField($fieldName)
+			->getAttribute('hint', '');
+
+		return $hint;
 	}
 
 	/**

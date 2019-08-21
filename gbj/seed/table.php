@@ -116,7 +116,7 @@ class GbjSeedTable extends JTable
 		}
 
 		// Set current date if creation date is empty
-		if ($this->created == $dateNull)
+		if (Helper::isEmptyDate($this->created))
 		{
 			$this->created = $dateSql;
 		}
@@ -323,8 +323,7 @@ class GbjSeedTable extends JTable
 	protected function checkDate($fieldName)
 	{
 		// Field is not used
-		if (!isset($this->$fieldName) || empty($this->$fieldName)
-			|| JFactory::getDate($this->$fieldName)->toUnix() < 0)
+		if (!isset($this->$fieldName) || Helper::isEmptyDate($this->$fieldName))
 		{
 			return;
 		}
@@ -348,13 +347,13 @@ class GbjSeedTable extends JTable
 	protected function checkDatesReverse($fieldDateOn = 'date_on', $fieldDateOff = 'date_off')
 	{
 		// Date on field is not used
-		if (!isset($this->$fieldDateOn) || empty($this->$fieldDateOn))
+		if (!isset($this->$fieldDateOn) || Helper::isEmptyDate($this->$fieldDateOn))
 		{
 			return;
 		}
 
 		// Date off field is not used
-		if (!isset($this->$fieldDateOff) || empty($this->$fieldDateOff))
+		if (!isset($this->$fieldDateOff) || Helper::isEmptyDate($this->$fieldDateOff))
 		{
 			return;
 		}
@@ -378,13 +377,13 @@ class GbjSeedTable extends JTable
 	protected function checkDatesEqual($fieldDateOn = 'date_on', $fieldDateOff = 'date_off')
 	{
 		// Date on field is not used
-		if (!isset($this->$fieldDateOn) || empty($this->$fieldDateOn))
+		if (!isset($this->$fieldDateOn) || Helper::isEmptyDate($this->$fieldDateOn))
 		{
 			return;
 		}
 
 		// Date off field is not used
-		if (!isset($this->$fieldDateOff) || empty($this->$fieldDateOff))
+		if (!isset($this->$fieldDateOff) || Helper::isEmptyDate($this->$fieldDateOff))
 		{
 			return;
 		}
