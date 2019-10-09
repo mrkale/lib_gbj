@@ -1000,6 +1000,26 @@ class GbjHelpersCommon
 	}
 
 	/**
+	 * Format datetime to a formatted string.
+	 *
+	 * @param   string   $date       Date or datetime to be formatted.
+	 * @param   string   $format     Formatting string, default for standard date
+	 *
+	 * @return  string   Formatted number as a string.
+	 */
+	public static function formatDate($date, $format=null)
+	{
+		if (is_null($date))
+		{
+			return null;
+		}
+
+		$format = $format ?? 'LIB_GBJ_FORMAT_DATE_SHORT';
+
+		return JFactory::getDate($date)->format(JText::_($format));
+	}
+
+	/**
 	 * Calculate number of days between two dates including the end day.
 	 *
 	 * @param   string   $dateStart			Beginning date in ANSI format
@@ -1013,12 +1033,13 @@ class GbjHelpersCommon
 		{
 			return null;
 		}
+
 		$jdate = new JDate($dateStart);
 		$timestampStart = $jdate->toUnix();
 		$jdate = new JDate($dateStop);
 		$timestampStop = $jdate->toUnix();
 		$period = ($timestampStop - $timestampStart) / 86400;
-		$period += 1;
+		$period++;
 
 		return $period;
 	}
@@ -1033,6 +1054,7 @@ class GbjHelpersCommon
 	public static function isEmptyDate($dateValue)
 	{
 		$dateNull = JFactory::getDbo()->getNullDate();
+
 		return empty($dateValue) || $dateValue == $dateNull
 			|| JFactory::getDate($dateValue)->toUnix() < 0;
 	}

@@ -200,9 +200,12 @@ class GbjSeedFieldList extends JFormFieldList
 	protected function prependVoidOptions($rows = array())
 	{
 		// Remove unknown options
-		$rows = array_filter($rows, function($val) {
-			return $val->value != '0';
-		});
+		$rows = array_filter($rows,
+			function ($val)
+			{
+				return $val->value != '0';
+			}
+		);
 
 		// Add null key
 		$unknown = new stdClass;

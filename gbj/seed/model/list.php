@@ -1271,7 +1271,7 @@ class GbjSeedModelList extends JModelList
 	}
 
 	/**
-	 * Calculates statistics from filtered records.
+	 * Calculates statistics from child agenda of filtered records.
 	 *
 	 * @param   string   $agenda        Child agenda table base name
 	 * @param   string   $fieldParent   Parent discriminator field name

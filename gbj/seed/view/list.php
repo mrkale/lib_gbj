@@ -142,12 +142,6 @@ class GbjSeedViewList extends GbjSeedViewDetail
 			{
 				JToolbarHelper::archiveList($viewList . '.archive');
 			}
-
-			// Add a checkin button
-			if (!in_array('checkin', $this->toolbarBlackList))
-			{
-//				JToolbarHelper::checkin($viewList . '.checkin');
-			}
 		}
 
 		// Add a trash button
@@ -187,7 +181,7 @@ class GbjSeedViewList extends GbjSeedViewDetail
 				$viewName . $action,
 				'exit.png',
 				'exit-2.png',
-				 JText::_('LIB_GBJ_BUTTON_EXIT') . JText::_($langConst),
+				JText::_('LIB_GBJ_BUTTON_EXIT') . JText::_($langConst),
 				false
 			);
 		}
@@ -258,15 +252,26 @@ class GbjSeedViewList extends GbjSeedViewDetail
 	/**
 	 * Enrich HTML string for displaying statistics.
 	 *
+	 * @param   array $periodStat  Array with date statistics.
+	 *
 	 * @return  string  HTML display string.
 	 */
-	public function htmlStatistics()
+	public function htmlStatistics($periodStat = array())
 	{
-		$value = Helper::formatNumber($this->pagination->total,
-			JText::_('LIB_GBJ_FORMAT_RECORDS')
-		);
+		// Record counts
 		$htmlString = parent::htmlStatistics();
-		$htmlString .= JText::sprintf('LIB_GBJ_STAT_RECORDS', $value);
+		$htmlString .= JText::sprintf('LIB_GBJ_STAT_RECORDS',
+			Helper::formatNumber($this->pagination->total, JText::_('LIB_GBJ_FORMAT_RECORDS'))
+		);
+
+		// Date range
+		if (isset($periodStat['min']) && isset($periodStat['max']))
+		{
+			$htmlString .= JText::sprintf(JText::_('LIB_GBJ_STAT_RANGE'), JText::_('LIB_GBJ_STAT_PER'),
+				Helper::formatDate($periodStat['min']),
+				Helper::formatDate($periodStat['max'])
+			);
+		}
 
 		return $htmlString;
 	}
