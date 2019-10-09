@@ -25,6 +25,7 @@ $pageclass_sfx = htmlspecialchars($tparams->get('pageclass_sfx'));
 $agendaTitle = JText::_(strtoupper($componentName) . '_' . strtoupper(Helper::plural($agenda)));
 $parentTitle = (is_object($this->model->parent) ? $this->model->parent->title : null);
 $parentPrefix = $this->escape($parentTitle ?? $tparams->get('page_heading') ?? $agendaTitle);
+$itemTitle = $this->item->title ?? JFactory::getDate($this->item->date_on)->format(JText::_('LIB_GBJ_FORMAT_DATE_SHORT'));
 
 if ($tparams->get('show_pagedescription'))
 {
@@ -40,7 +41,7 @@ if ($tparams->get('show_pagedescription'))
 			<?php echo $parentPrefix; ?>
 		</a>
 		<?php echo JText::_('LIB_GBJ_TITLE_SEPARATOR'); ?>
-		<?php echo $this->item->title ?? $this->item->date_on; ?>
+		<?php echo $itemTitle; ?>
 	</h1>
 <?php if (!empty($description)): ?>
 	<div>
