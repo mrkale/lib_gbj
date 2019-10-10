@@ -95,7 +95,7 @@ if (!$disabled)
 	switch ($field_type)
 	{
 		case 'date':
-			if (JFactory::getDate($field_value)->toUnix() < 0)
+			if (Helper::isEmptyDate($field_value))
 			{
 				$field_value = null;
 			}
