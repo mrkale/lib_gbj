@@ -1045,7 +1045,7 @@ class GbjHelpersCommon
 	}
 
 	/**
-	 * Check if a date is empty of zeroed.
+	 * Check if a date is empty or zeroed.
 	 *
 	 * @param   date   $dateValue   Date value.
 	 *
@@ -1054,8 +1054,9 @@ class GbjHelpersCommon
 	public static function isEmptyDate($dateValue)
 	{
 		$dateNull = JFactory::getDbo()->getNullDate();
+		$dateNull = JFactory::getDate($dateNull)->toISO8601();
+		$dateIso  = JFactory::getDate($dateValue)->toISO8601();
 
-		return empty($dateValue) || $dateValue == $dateNull
-			|| JFactory::getDate($dateValue)->toUnix() < 0;
+		return empty($dateValue) || $dateIso == $dateNull;
 	}
 }

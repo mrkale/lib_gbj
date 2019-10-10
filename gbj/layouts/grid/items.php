@@ -163,7 +163,7 @@ foreach ($fieldList as $fieldIdx => $fieldName)
 					break;
 
 				case 'date':
-					if (JFactory::getDate($record->$fieldName)->toUnix() < 0)
+					if (Helper::isEmptyDate($record->$fieldName))
 					{
 						$variantFieldValue = null;
 					}
