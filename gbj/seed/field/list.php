@@ -101,6 +101,29 @@ class GbjSeedFieldList extends JFormFieldList
 				}
 				break;
 
+			case 'yearout':
+				$table = Helper::getTable($app->input->get('view'));
+				$query
+					->select('DISTINCT YEAR(a.date_out) AS value')
+					->from($db->quoteName($table, 'a'))
+					->order('a.date_out DESC');
+				$db->setQuery($query);
+
+				try
+				{
+					$rows = $db->loadObjectList();
+				}
+				catch (RuntimeException $e)
+				{
+					$app->enqueueMessage($e->getMessage(), 'warning');
+				}
+
+				foreach ($rows as $key => $row)
+				{
+					$rows[$key]->text = $row->value;
+				}
+				break;
+
 			case 'month':
 				$table = Helper::getTable($app->input->get('view'));
 				$query
@@ -134,6 +157,33 @@ class GbjSeedFieldList extends JFormFieldList
 					->select(array(
 						'DISTINCT MONTH(a.date_off) AS value',
 						'MONTHNAME(a.date_off) AS text',
+						)
+					)
+					->from($db->quoteName($table, 'a'))
+					->order(1);
+				$db->setQuery($query);
+
+				try
+				{
+					$rows = $db->loadObjectList();
+				}
+				catch (RuntimeException $e)
+				{
+					$app->enqueueMessage($e->getMessage(), 'warning');
+				}
+
+				foreach ($rows as $key => $row)
+				{
+					$rows[$key]->text = Helper::proper(JText::_(strtoupper($row->text)));
+				}
+				break;
+
+			case 'monthout':
+				$table = Helper::getTable($app->input->get('view'));
+				$query
+					->select(array(
+						'DISTINCT MONTH(a.date_out) AS value',
+						'MONTHNAME(a.date_out) AS text',
 						)
 					)
 					->from($db->quoteName($table, 'a'))

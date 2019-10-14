@@ -158,6 +158,7 @@ class GbjSeedTable extends JTable
 		$this->checkAlias();
 		$this->checkDate('date_on');
 		$this->checkDate('date_off');
+		$this->checkDate('date_out');
 		$this->checkDatesReverse();
 
 		// Result
@@ -339,29 +340,29 @@ class GbjSeedTable extends JTable
 	/**
 	 * Check the pair of dates for reverse order.
 	 *
-	 * @param   string $fieldDateOn	   The name of a field with start date.
-	 * @param   string $fieldDateOff   The name of a field with end date.
+	 * @param   string $fieldDateOne   The name of a field with start date.
+	 * @param   string $fieldDateTwo   The name of a field with end date.
 	 *
 	 * @return void
 	 */
-	protected function checkDatesReverse($fieldDateOn = 'date_on', $fieldDateOff = 'date_off')
+	protected function checkDatesReverse($fieldDateOne = 'date_on', $fieldDateTwo = 'date_off')
 	{
 		// Date on field is not used
-		if (!isset($this->$fieldDateOn) || Helper::isEmptyDate($this->$fieldDateOn))
+		if (!isset($this->$fieldDateOne) || Helper::isEmptyDate($this->$fieldDateOne))
 		{
 			return;
 		}
 
 		// Date off field is not used
-		if (!isset($this->$fieldDateOff) || Helper::isEmptyDate($this->$fieldDateOff))
+		if (!isset($this->$fieldDateTwo) || Helper::isEmptyDate($this->$fieldDateTwo))
 		{
 			return;
 		}
 
 		// End date is sooner than start date
-		if ($this->$fieldDateOff < $this->$fieldDateOn)
+		if ($this->$fieldDateTwo < $this->$fieldDateOne)
 		{
-			$fieldName = $fieldDateOn . '.' . $fieldDateOff;
+			$fieldName = $fieldDateOne . '.' . $fieldDateTwo;
 			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_DATEOFF_LESS');
 		}
 	}
@@ -369,29 +370,29 @@ class GbjSeedTable extends JTable
 	/**
 	 * Check the pair of dates for equality.
 	 *
-	 * @param   string $fieldDateOn	   The name of a field with start date.
-	 * @param   string $fieldDateOff   The name of a field with end date.
+	 * @param   string $fieldDateOne   The name of a field with start date.
+	 * @param   string $fieldDateTwo   The name of a field with end date.
 	 *
 	 * @return void
 	 */
-	protected function checkDatesEqual($fieldDateOn = 'date_on', $fieldDateOff = 'date_off')
+	protected function checkDatesEqual($fieldDateOne = 'date_on', $fieldDateTwo = 'date_off')
 	{
 		// Date on field is not used
-		if (!isset($this->$fieldDateOn) || Helper::isEmptyDate($this->$fieldDateOn))
+		if (!isset($this->$fieldDateOne) || Helper::isEmptyDate($this->$fieldDateOne))
 		{
 			return;
 		}
 
 		// Date off field is not used
-		if (!isset($this->$fieldDateOff) || Helper::isEmptyDate($this->$fieldDateOff))
+		if (!isset($this->$fieldDateTwo) || Helper::isEmptyDate($this->$fieldDateTwo))
 		{
 			return;
 		}
 
 		// End date is equal to start date
-		if ($this->$fieldDateOff == $this->$fieldDateOn)
+		if ($this->$fieldDateTwo == $this->$fieldDateOne)
 		{
-			$fieldName = $fieldDateOn . '.' . $fieldDateOff;
+			$fieldName = $fieldDateOne . '.' . $fieldDateTwo;
 			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_DATEOFF_EQUAL');
 		}
 	}
