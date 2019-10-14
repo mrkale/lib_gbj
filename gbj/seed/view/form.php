@@ -100,4 +100,37 @@ class GbjSeedViewForm extends JViewLegacy
 	{
 		return is_object($this->model->parent);
 	}
+
+	/**
+	 * Create HTML string for displaying record detail tab label.
+	 *
+	 * @return  string  HTML display string.
+	 */
+	protected function getTabRecord()
+	{
+		// Component parameters
+		$cparams = JComponentHelper::getParams(Helper::getName());
+		$bold = $cparams->get('detail_record_tab_bold') ? 'bolder' : 'normal';
+
+		$recordTag = JText::sprintf('LIB_GBJ_OLD_RECORD', $this->item->id);
+		$color = $cparams->get('detail_record_tab_color_edit');
+
+
+		if (empty($this->item->id))
+		{
+			$recordTag = JText::_('LIB_GBJ_NEW_RECORD');
+			$color = $cparams->get('detail_record_tab_color_new');
+		}
+		elseif ($this->item->checked_out_time == $this->item->created
+			&& $this->item->created == $this->item->modified)
+		{
+			$recordTag = JText::sprintf('LIB_GBJ_COPY_RECORD', $this->item->id);
+			$color = $cparams->get('detail_record_tab_color_copy');
+		}
+
+		$recordTag = '<span style="color: ' . $color
+			. '; font-weight: ' . $bold . ';">'
+			. $recordTag . '</span>';
+		return $recordTag;
+	}
 }

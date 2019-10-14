@@ -1020,7 +1020,7 @@ class GbjHelpersCommon
 	}
 
 	/**
-	 * Calculate number of days between two dates including the end day.
+	 * Calculate number of days between two dates without the end day.
 	 *
 	 * @param   string   $dateStart			Beginning date in ANSI format
 	 * @param   string   $dateStop			Finnish date in ANSI format
@@ -1029,7 +1029,7 @@ class GbjHelpersCommon
 	 */
 	public static function calculatePeriodDays($dateStart, $dateStop)
 	{
-		if (is_null($dateStart) || is_null($dateStop))
+		if (self::isEmptyDate($dateStart) || self::isEmptyDate($dateStop))
 		{
 			return null;
 		}
@@ -1039,7 +1039,6 @@ class GbjHelpersCommon
 		$jdate = new JDate($dateStop);
 		$timestampStop = $jdate->toUnix();
 		$period = ($timestampStop - $timestampStart) / 86400;
-		$period++;
 
 		return $period;
 	}
