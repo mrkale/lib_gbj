@@ -1148,6 +1148,11 @@ class GbjHelpersCommon
 	 */
 	public static function formatIntegerUnit($integer, $langConst)
 	{
+		if (is_null($integer))
+		{
+			return null;
+		}
+
 		if ($integer == 1)
 		{
 			$langConst .= "_ONE";
