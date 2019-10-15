@@ -1022,8 +1022,8 @@ class GbjHelpersCommon
 	/**
 	 * Calculate number of days between two dates without the end day.
 	 *
-	 * @param   string   $dateStart			Beginning date in ANSI format
-	 * @param   string   $dateStop			Finnish date in ANSI format
+	 * @param   string   $dateStart			Beginning date in MySQL format
+	 * @param   string   $dateStop			Finnish date in MySQL format
 	 *
 	 * @return  int   Number of days within the period.
 	 */
@@ -1034,11 +1034,90 @@ class GbjHelpersCommon
 			return null;
 		}
 
-		$jdate = new JDate($dateStart);
-		$timestampStart = $jdate->toUnix();
-		$jdate = new JDate($dateStop);
-		$timestampStop = $jdate->toUnix();
-		$period = ($timestampStop - $timestampStart) / 86400;
+		$jdateStart = new JDate($dateStart);
+		$jdateStop = new JDate($dateStop);
+		$interval = date_diff($jdateStart, $jdateStop);
+
+		return $interval->days;
+	}
+
+	/**
+	 * Format date period form number of days.
+	 *
+	 * @param   int   $days   Number of days
+	 *
+	 * @return  string   Formatted date period
+	 */
+	public static function formatPeriodDays($days)
+	{
+		if (is_null($days) || empty($days))
+		{
+			return null;
+		}
+
+		$interval = new DateInterval('P' . strval($days) . 'D');
+		$datePast = new DateTime();
+		$datePast  = $datePast->sub($interval);
+		$dateToday = new DateTime();
+		$interval = $datePast->diff($dateToday);
+		$periodList = [];
+
+		if ($interval->y)
+		{
+			$periodList[] = self::formatIntegerUnit($interval->format('%y'), 'LIB_GBJ_FORMAT_YEARS');
+		}
+
+		if ($interval->m)
+		{
+			$periodList[] = self::formatIntegerUnit($interval->format('%m'), 'LIB_GBJ_FORMAT_MONTHS');
+		}
+
+		if ($interval->d)
+		{
+			$periodList[] = self::formatIntegerUnit($interval->format('%d'), 'LIB_GBJ_FORMAT_DAYS');
+		}
+
+		$period = JText::sprintf('LIB_GBJ_FORMAT_PERIOD_DATE', implode(' ', $periodList));
+
+		return $period;
+	}
+
+	/**
+	 * Format date period between two dates.
+	 *
+	 * @param   string   $dateStart			Beginning date in MySQL format
+	 * @param   string   $dateStop			Finnish date in MySQL format
+	 *
+	 * @return  string   Formatted date period
+	 */
+	public static function formatPeriodDates($dateStart, $dateStop)
+	{
+		if (self::isEmptyDate($dateStart) || self::isEmptyDate($dateStop))
+		{
+			return null;
+		}
+
+		$jdateStart = new JDate($dateStart);
+		$jdateStop = new JDate($dateStop);
+		$interval = $jdateStart->diff($jdateStop);
+		$periodList = [];
+
+		if ($interval->y)
+		{
+			$periodList[] = self::formatIntegerUnit($interval->format('%y'), 'LIB_GBJ_FORMAT_YEARS');
+		}
+
+		if ($interval->m)
+		{
+			$periodList[] = self::formatIntegerUnit($interval->format('%m'), 'LIB_GBJ_FORMAT_MONTHS');
+		}
+
+		if ($interval->d)
+		{
+			$periodList[] = self::formatIntegerUnit($interval->format('%d'), 'LIB_GBJ_FORMAT_DAYS');
+		}
+
+		$period = JText::sprintf('LIB_GBJ_FORMAT_PERIOD_DATE', implode(' ', $periodList));
 
 		return $period;
 	}
@@ -1057,5 +1136,48 @@ class GbjHelpersCommon
 		$dateIso  = JFactory::getDate($dateValue)->toISO8601();
 
 		return empty($dateValue) || $dateIso == $dateNull;
+	}
+
+	/**
+	 * Format integer and its unit as language constant grammatically.
+	 *
+	 * @param   int      $integer     Integer value to be formatted.
+	 * @param   string   $langConst   Language constant for 'many' amount.
+	 *
+	 * @return  string  Formatted string with integer value with units.
+	 */
+	public static function formatIntegerUnit($integer, $langConst)
+	{
+		if ($integer == 1)
+		{
+			$langConst .= "_ONE";
+		}
+		elseif ($integer > 1 && $integer < 5)
+		{
+			$langConst .= "_FEW";
+		}
+
+		return JText::sprintf('LIB_GBJ_STAT_VALUE_UNIT', $integer, JText::_($langConst));
+	}
+
+	/**
+	 * Return the first non-empty date from input dates in MySql format.
+	 *
+	 * @return  string   First non-empty date
+	 */
+	public static function getProperDate()
+	{
+		$dates = func_get_args();
+
+		if ($dates)
+		{
+			foreach ($dates as $date)
+			{
+				if (!self::isEmptyDate($date))
+				{
+					return $date;
+				}
+			}
+		}
 	}
 }

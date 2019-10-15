@@ -59,14 +59,22 @@ foreach ($fieldList as $fieldIdx => $fieldName)
 
 		if ($gridPrefix)
 		{
-			$prefixValue = JText::_($gridPrefix);
+			$prefixList = explode(';', $gridPrefix);
 
-			if ($prefixValue == $gridPrefix)	// No language constants
+			foreach ($prefixList as $i => $prefixItem)
 			{
-				$prefixValue = $record->$gridPrefix ?? JText::_('LIB_GBJ_NONE_PREFIX');
+				$prefixValue = JText::_($prefixItem);
+
+				if ($prefixValue == $prefixItem)	// No language constants
+				{
+					$prefixValue = $record->$prefixItem ?? JText::_('LIB_GBJ_NONE_PREFIX');
+				}
+
+				$prefixList[$i] = $prefixValue;
 			}
 
-			$gridPrefix = ltrim($prefixValue . Helper::COMMON_HTML_SPACE);
+			$gridPrefix = implode(Helper::COMMON_HTML_SPACE, $prefixList)
+				. Helper::COMMON_HTML_SPACE;
 		}
 
 		// XML attribute - suffix for displaying value - default NULL
@@ -74,14 +82,22 @@ foreach ($fieldList as $fieldIdx => $fieldName)
 
 		if ($gridSuffix)
 		{
-			$suffixValue = JText::_($gridSuffix);
+			$suffixList = explode(';', $gridSuffix);
 
-			if ($suffixValue == $gridSuffix)	// No language constants
+			foreach ($suffixList as $i => $suffixItem)
 			{
-				$suffixValue = $record->$gridSuffix ?? JText::_('LIB_GBJ_NONE_SUFFIX');
+				$suffixValue = JText::_($suffixItem);
+
+				if ($suffixValue == $suffixItem)	// No language constants
+				{
+					$suffixValue = $record->$suffixItem ?? JText::_('LIB_GBJ_NONE_SUFFIX');
+				}
+
+				$suffixList[$i] = $suffixValue;
 			}
 
-			$gridSuffix = rtrim(Helper::COMMON_HTML_SPACE . $suffixValue);
+			$gridSuffix = Helper::COMMON_HTML_SPACE
+				. implode(Helper::COMMON_HTML_SPACE, $suffixList);
 		}
 
 		$fieldTags = '';
