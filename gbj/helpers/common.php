@@ -1042,47 +1042,6 @@ class GbjHelpersCommon
 	}
 
 	/**
-	 * Format date period form number of days.
-	 *
-	 * @param   int   $days   Number of days
-	 *
-	 * @return  string   Formatted date period
-	 */
-	public static function formatPeriodDays($days)
-	{
-		if (is_null($days) || empty($days))
-		{
-			return null;
-		}
-
-		$interval = new DateInterval('P' . strval($days) . 'D');
-		$datePast = new DateTime();
-		$datePast  = $datePast->sub($interval);
-		$dateToday = new DateTime();
-		$interval = $datePast->diff($dateToday);
-		$periodList = [];
-
-		if ($interval->y)
-		{
-			$periodList[] = self::formatIntegerUnit($interval->format('%y'), 'LIB_GBJ_FORMAT_YEARS');
-		}
-
-		if ($interval->m)
-		{
-			$periodList[] = self::formatIntegerUnit($interval->format('%m'), 'LIB_GBJ_FORMAT_MONTHS');
-		}
-
-		if ($interval->d)
-		{
-			$periodList[] = self::formatIntegerUnit($interval->format('%d'), 'LIB_GBJ_FORMAT_DAYS');
-		}
-
-		$period = JText::sprintf('LIB_GBJ_FORMAT_PERIOD_DATE', implode(' ', $periodList));
-
-		return $period;
-	}
-
-	/**
 	 * Format date period between two dates.
 	 *
 	 * @param   string   $dateStart			Beginning date in MySQL format
@@ -1104,17 +1063,17 @@ class GbjHelpersCommon
 
 		if ($interval->y)
 		{
-			$periodList[] = self::formatIntegerUnit($interval->format('%y'), 'LIB_GBJ_FORMAT_YEARS');
+			$periodList[] = self::formatNumberUnit($interval->format('%y'), 'LIB_GBJ_FORMAT_YEARS');
 		}
 
 		if ($interval->m)
 		{
-			$periodList[] = self::formatIntegerUnit($interval->format('%m'), 'LIB_GBJ_FORMAT_MONTHS');
+			$periodList[] = self::formatNumberUnit($interval->format('%m'), 'LIB_GBJ_FORMAT_MONTHS');
 		}
 
 		if ($interval->d)
 		{
-			$periodList[] = self::formatIntegerUnit($interval->format('%d'), 'LIB_GBJ_FORMAT_DAYS');
+			$periodList[] = self::formatNumberUnit($interval->format('%d'), 'LIB_GBJ_FORMAT_DAYS');
 		}
 
 		$period = JText::sprintf('LIB_GBJ_FORMAT_PERIOD_DATE', implode(' ', $periodList));
@@ -1139,30 +1098,58 @@ class GbjHelpersCommon
 	}
 
 	/**
-	 * Format integer and its unit as language constant grammatically.
+	 * Inflect language constant by input number by particular suffixes to it.
 	 *
-	 * @param   int      $integer     Integer value to be formatted.
 	 * @param   string   $langConst   Language constant for 'many' amount.
+	 * @param   float    $number      Number for controlling inflection.
 	 *
-	 * @return  string  Formatted string with integer value with units.
+	 * @return  string  Inflected language constant with suffix to the input one.
 	 */
-	public static function formatIntegerUnit($integer, $langConst)
+	public static function inflectLang($langConst, $number)
 	{
-		if (is_null($integer))
+		if (is_null($number))
 		{
 			return null;
 		}
 
-		if ($integer == 1)
+		if (floatval($number) - intval($number))
 		{
-			$langConst .= "_ONE";
-		}
-		elseif ($integer > 1 && $integer < 5)
-		{
-			$langConst .= "_FEW";
+			return $langConst . "_DEC";
 		}
 
-		return JText::sprintf('LIB_GBJ_STAT_VALUE_UNIT', $integer, JText::_($langConst));
+		$number = intval($number);
+
+		if ($number == 1)
+		{
+			return $langConst . "_ONE";
+		}
+
+		if ($number > 1 && $number < 5)
+		{
+			return $langConst . "_FEW";
+		}
+
+		return $langConst;
+	}
+
+	/**
+	 * Format number and its unit grammatically.
+	 *
+	 * @param   decimal  $number      Number to be formatted.
+	 * @param   string   $langConst   Language constant for 'many' amount.
+	 *
+	 * @return  string  Formatted string with integer value with units.
+	 */
+	public static function formatNumberUnit($number, $langConst)
+	{
+		if (is_null($number) || is_null($langConst))
+		{
+			return null;
+		}
+
+		$langConst = self::inflectLang($langConst, $number);
+
+		return JText::sprintf('LIB_GBJ_STAT_VALUE_UNIT', $number, JText::_($langConst));
 	}
 
 	/**
