@@ -262,7 +262,7 @@ class GbjSeedTable extends JTable
 		}
 
 		// Date field is not used
-		if (!isset($this->$fieldDate) || empty($this->$fieldDate))
+		if (!isset($this->$fieldDate) || Helper::isEmptyDate($this->$fieldDate))
 		{
 			return;
 		}
@@ -281,6 +281,7 @@ class GbjSeedTable extends JTable
 			|| $this->$primaryKeyName == 0)))
 		{
 			$fieldName = $fieldTitle . '.' . $fieldDate;
+			$this->checkWarning = true;
 			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_UNIQUE_TITLEDATE');
 		}
 	}
