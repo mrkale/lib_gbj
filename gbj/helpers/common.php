@@ -773,7 +773,7 @@ class GbjHelpersCommon
 
 		foreach ($prefixes as $prefix)
 		{
-			$tableName = $realPrefix . $prefix . $tableSuffix;
+			$tableName = strtolower($realPrefix . $prefix . $tableSuffix);
 
 			if (self::isTable($tableName))
 			{
