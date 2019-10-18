@@ -204,7 +204,6 @@ class GbjSeedTable extends JTable
 		}
 
 		$errorType = $this->checkWarning ? 'warning' : 'error';
-		$this->checkWarning = false;
 		JFactory::getApplication()->enqueueMessage(JText::_($this->errorMsgs[$errorIdx]), $errorType);
 
 		// Reset
@@ -214,6 +213,45 @@ class GbjSeedTable extends JTable
 		{
 			$this->errorMsgs[$errorIdx] = null;
 		}
+	}
+
+	/**
+	 * Determine if there is a duplicate record with the same input fields.
+	 *
+	 * @param   array $fieldList   List of field name and values for searching a record(s).
+	 * @param   array $keyList     List of field name and values for primary key(s).
+	 *
+	 * @return void
+	 */
+	protected function isDuplicateRecord($fieldList, $keyList)
+	{
+		$condOr = array();
+		$db = $this->getDbo();
+		$tableName = $this->getTableName();
+		$query = $db->getQuery(true)
+			->select('*')
+			->from($tableName);
+		$fields = array_keys($this->getProperties());
+
+		// Search filter
+		foreach ($fieldList as $field => $value)
+		{
+			if (in_array($field, $fields))
+			{
+				$query->where($db->quoteName($field) . '=' . $db->quote($value));
+			}
+		}
+
+		// Negative filter conditions
+		foreach ($keyList as $field => $value)
+		{
+			$condOr[] = $db->quoteName($field) . '<>' . $db->quote($value ?? 0);
+		}
+
+		$query->extendWhere('AND', $condOr, 'OR');
+		$db->setQuery($query);
+
+		return !is_null($db->loadResult());
 	}
 
 	/**
@@ -231,15 +269,12 @@ class GbjSeedTable extends JTable
 			return;
 		}
 
-		// Clone current table object for checking
 		$primaryKeyName = $this->getKeyName();
-		$table = clone $this;
 
-		// Verify that the title is unique
-		if ($table->load(array($fieldName => $this->$fieldName))
-			&& (isset($primaryKeyName)
-			&& ($table->$primaryKeyName != $this->$primaryKeyName
-			|| $this->$primaryKeyName == 0)))
+		if ($this->isDuplicateRecord(
+			array($fieldName => $this->$fieldName),
+			array($primaryKeyName => $this->$primaryKeyName)
+		))
 		{
 			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_UNIQUE_TITLE');
 		}
@@ -267,18 +302,15 @@ class GbjSeedTable extends JTable
 			return;
 		}
 
-		// Clone current table object for checking
 		$primaryKeyName = $this->getKeyName();
-		$table = clone $this;
 
-		// Verify that the title with date is unique
-		if ($table->load(array(
+		if ($this->isDuplicateRecord(
+			array(
 				$fieldTitle => $this->$fieldTitle,
-				$fieldDate => $this->$fieldDate)
-		)
-			&& (isset($primaryKeyName)
-			&& ($table->$primaryKeyName != $this->$primaryKeyName
-			|| $this->$primaryKeyName == 0)))
+				$fieldDate => $this->$fieldDate
+			),
+			array($primaryKeyName => $this->$primaryKeyName)
+		))
 		{
 			$fieldName = $fieldTitle . '.' . $fieldDate;
 			$this->checkWarning = true;
@@ -301,15 +333,12 @@ class GbjSeedTable extends JTable
 			return;
 		}
 
-		// Clone current table object for checking
 		$primaryKeyName = $this->getKeyName();
-		$table = clone $this;
 
-		// Verify that the alias is unique
-		if ($table->load(array($fieldName => $this->$fieldName))
-			&& (isset($primaryKeyName)
-			&& ($table->$primaryKeyName != $this->$primaryKeyName
-			|| $this->$primaryKeyName == 0)))
+		if ($this->isDuplicateRecord(
+			array($fieldName => $this->$fieldName),
+			array($primaryKeyName => $this->$primaryKeyName)
+		))
 		{
 			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_UNIQUE_ALIAS');
 		}
