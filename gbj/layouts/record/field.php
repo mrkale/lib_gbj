@@ -138,7 +138,7 @@ if (!$disabled)
 		case 'number':
 			if (is_null($gridFormat))
 			{
-				$field_value = floatval($field_value);
+				$field_value = is_null($field_value) ? null : floatval($field_value);
 			}
 			else
 			{
