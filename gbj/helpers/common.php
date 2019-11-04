@@ -1172,4 +1172,38 @@ class GbjHelpersCommon
 			}
 		}
 	}
+
+	/**
+	 * HTML rendering the data as emphasized.
+	 *
+	 * @param   string  $fieldData   Text to render.
+	 *
+	 * @return  string  HTML statement with rendered data.
+	 */
+	public static function htmlRenderItalic($fieldData)
+	{
+		if (strpos($fieldData, '<em>') === false)
+		{
+			$fieldData = '<em>' . $fieldData . '</em>';
+		}
+
+		return $fieldData;
+	}
+
+	/**
+	 * HTML rendering the data as strong.
+	 *
+	 * @param   string  $fieldData   Text to render.
+	 *
+	 * @return  string  HTML statement with rendered data.
+	 */
+	public static function htmlRenderBold($fieldData)
+	{
+		if (strpos($fieldData, '<strong>') === false)
+		{
+			$fieldData = '<strong>' . $fieldData . '</strong>';
+		}
+
+		return $fieldData;
+	}
 }

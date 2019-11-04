@@ -28,9 +28,7 @@ $canChange = $user->authorise('core.edit.state', Helper::getName())
 // Options
 $options = $this->getOptions();
 $fieldList = $options->get('fields');
-$italic = boolval($options->get('italic'));
-$bold = boolval($options->get('bold'));
-
+$flagNoDesc = boolval($options->get('nodesc'));
 
 if (is_string($fieldList))
 {
@@ -39,6 +37,8 @@ if (is_string($fieldList))
 
 foreach ($fieldList as $fieldIdx => $fieldName)
 {
+	$flagFutureDate = false;
+
 	$fieldName = trim($fieldName);
 	$field = $displayData->gridFields[$fieldName];
 
@@ -198,7 +198,7 @@ foreach ($fieldList as $fieldIdx => $fieldName)
 
 						if (JFactory::getDate($record->$fieldName)->format($dateCompareFormat) > JFactory::getDate()->format($dateCompareFormat))
 						{
-							$variantFieldValue = '<strong><em>' . $variantFieldValue . '</em></strong>';
+							$flagFutureDate = true;
 						}
 					}
 
@@ -301,29 +301,27 @@ foreach ($fieldList as $fieldIdx => $fieldName)
 			$fieldData = $gridPrefix . $fieldValue . $gridSuffix;
 		}
 
-		// Specifically process only the very first field in the list
-		if ($fieldIdx == 0)
+		// Render for hyperlink to detail - Only the first field in a list
+		if ($fieldIdx == 0 && isset($fieldUrl) && !is_null($fieldUrl))
 		{
-			// Construct element as the hypertext
-			if (isset($fieldUrl) && !is_null($fieldUrl))
-			{
-				$fieldData = '<a href="'
-					. JRoute::_($fieldUrl)
-					. '">'
-					. $fieldData
-					. '</a>';
-			}
+			$fieldData = '<a href="'
+				. JRoute::_($fieldUrl)
+				. '">'
+				. $fieldData
+				. '</a>';
+		}
 
-			// Render field
-			if ($italic && strpos($fieldData, '<em>') === false)
-			{
-				$fieldData = '<em>' . $fieldData . '</em>';
-			}
+		// Render for future date
+		if ($flagFutureDate)
+		{
+			$fieldData = Helper::htmlRenderBold($fieldData);
+		}
 
-			if ($bold && strpos($fieldData, '<strong>') === false)
-			{
-				$fieldData = '<strong>' . $fieldData . '</strong>';
-			}
+		// Render for empty description - Only the first field in a list
+		if ($flagNoDesc)
+		{
+			$fieldData = Helper::htmlRenderItalic($fieldData);
+			$flagNoDesc = false;
 		}
 
 		// Add field to list

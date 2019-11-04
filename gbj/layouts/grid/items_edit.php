@@ -20,4 +20,9 @@ $url = Helper::getUrl(array('task' => $task, 'id' => $id));
 $options = $this->getOptions();
 $options->set('url', $url);
 
+if (empty($displayData->item->description))
+{
+	$options->set('nodesc', true);
+}
+
 echo JLayoutHelper::render('grid.items', $displayData, $layoutBasePath, $options);

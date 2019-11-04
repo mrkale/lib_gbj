@@ -156,6 +156,7 @@ class GbjSeedTable extends JTable
 	{
 		$this->checkTitleDate();
 		$this->checkAlias();
+		$this->checkEmpty();
 		$this->checkDate('date_on');
 		$this->checkDate('date_off');
 		$this->checkDate('date_out');
@@ -473,6 +474,33 @@ class GbjSeedTable extends JTable
 		if ((float) $this->$fieldName < 0)
 		{
 			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_QUANTITY_FIELD');
+		}
+	}
+
+	/**
+	 * Check the field is empty.
+	 *
+	 * @param   string $fieldName  The name of a field to be checked.
+	 *
+	 * @return void
+	 */
+	protected function checkEmpty($fieldName = 'description')
+	{
+		// Field is not used
+		if (!isset($this->$fieldName))
+		{
+			return;
+		}
+
+		// Warn that the field is empty
+		if (empty($this->$fieldName))
+		{
+			$errMsg = JText::sprintf(
+				'LIB_GBJ_ERROR_FIELD_EMPTY',
+				JText::_('JGLOBAL_DESCRIPTION')
+			);
+			$this->checkWarning = true;
+			$this->raiseError($fieldName, $errMsg);
 		}
 	}
 }
