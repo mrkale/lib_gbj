@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj
+ * @copyright  (c) 2017-2019 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -19,6 +19,5 @@ $url = Helper::getUrl(array('task' => $task, 'id' => $id));
 // Options
 $options = $this->getOptions();
 $options->set('url', $url);
-?>
 
-<?php echo JLayoutHelper::render('grid.items', $displayData, $layoutBasePath, $options); ?>
+echo JLayoutHelper::render('grid.items', $displayData, $layoutBasePath, $options);

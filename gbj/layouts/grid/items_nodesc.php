@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017-2019 Libor Gabaj
+ * @copyright  (c) 2019 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -10,14 +10,14 @@
 defined('_JEXEC') or die;
 
 $layoutBasePath = Helper::getLayoutBase();
+$record = $displayData->item;
 
-// Injected option
-$view = Helper::singular($displayData->getName());
-$id = $displayData->item->id;
-$url = Helper::getUrl(array('view' => $view, 'id' => $id));
-
-// Options
+// Inject option for italic, if description is empty
 $options = $this->getOptions();
-$options->set('url', $url);
+
+if (empty($record->description))
+{
+	$options->set('italic', true);
+}
 
 echo JLayoutHelper::render('grid.items', $displayData, $layoutBasePath, $options);

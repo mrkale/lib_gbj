@@ -28,6 +28,9 @@ $canChange = $user->authorise('core.edit.state', Helper::getName())
 // Options
 $options = $this->getOptions();
 $fieldList = $options->get('fields');
+$italic = boolval($options->get('italic'));
+$bold = boolval($options->get('bold'));
+
 
 if (is_string($fieldList))
 {
@@ -298,14 +301,29 @@ foreach ($fieldList as $fieldIdx => $fieldName)
 			$fieldData = $gridPrefix . $fieldValue . $gridSuffix;
 		}
 
-		// Construct element as the hypertext only for the first field in the list
-		if (isset($fieldUrl) && !is_null($fieldUrl) && $fieldIdx == 0)
+		// Specifically process only the very first field in the list
+		if ($fieldIdx == 0)
 		{
-			$fieldData = '<a href="'
-				. JRoute::_($fieldUrl)
-				. '">'
-				. $fieldData
-				. '</a>';
+			// Construct element as the hypertext
+			if (isset($fieldUrl) && !is_null($fieldUrl))
+			{
+				$fieldData = '<a href="'
+					. JRoute::_($fieldUrl)
+					. '">'
+					. $fieldData
+					. '</a>';
+			}
+
+			// Render field
+			if ($italic && strpos($fieldData, '<em>') === false)
+			{
+				$fieldData = '<em>' . $fieldData . '</em>';
+			}
+
+			if ($bold && strpos($fieldData, '<strong>') === false)
+			{
+				$fieldData = '<strong>' . $fieldData . '</strong>';
+			}
 		}
 
 		// Add field to list
@@ -350,8 +368,8 @@ else
 	$tableTags = $renderFields[0]['tag'];
 	$tableData = $renderFields[0]['data'];
 }
-?>
 
-<?php if ($fieldCount) : ?>
-<td<?php echo $tableTags; ?>><?php echo $tableData; ?></td>
-<?php endif;
+if ($fieldCount)
+{
+	echo '<td' . $tableTags . '>' . $tableData . '</td>';
+}

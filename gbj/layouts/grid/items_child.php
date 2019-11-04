@@ -27,6 +27,5 @@ $parentType = Helper::singular($displayData->getName());
 $id = $record->id;
 $url = Helper::getUrlViewParent($view, $parentType, $id);
 $options->set('url', $url);
-?>
 
-<?php echo JLayoutHelper::render('grid.items', $displayData, $layoutBasePath, $options); ?>
+echo JLayoutHelper::render('grid.items', $displayData, $layoutBasePath, $options);
