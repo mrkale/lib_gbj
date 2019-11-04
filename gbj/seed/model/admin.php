@@ -320,12 +320,6 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 		// Prepare title
 		if (array_key_exists('title', $fields))
 		{
-			// Modify copy
-			if ($table->$primaryKeyName == 0 && (int) $table->created > 0)
-			{
-				$table->title .= JText::_('LIB_GBJ_CLONE');
-			}
-
 			$table->title = htmlspecialchars_decode($table->title, ENT_QUOTES);
 		}
 
@@ -338,14 +332,49 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 				$title = $table->title ?? $this->getNewTitle();
 				$table->alias = JFilterOutput::stringURLSafe($title);
 			}
+			$table->alias = htmlspecialchars_decode($table->alias, ENT_QUOTES);
+		}
 
-			// Modify copy
-			if ($table->$primaryKeyName == 0 && (int) $table->created > 0)
+		// Force data to items of a cloned record
+		if ($table->$primaryKeyName == 0 && (int) $table->created > 0)
+		{
+			$table->state = Helper::COMMON_STATE_UNPUBLISHED;
+
+			if (array_key_exists('title', $fields))
+			{
+				$table->title .= JText::_('LIB_GBJ_CLONE');
+			}
+
+			if (array_key_exists('alias', $fields))
 			{
 				$table->alias .= JText::_('LIB_GBJ_CLONE');
 			}
 
-			$table->alias = htmlspecialchars_decode($table->alias, ENT_QUOTES);
+			if (array_key_exists('date_on', $fields))
+			{
+				$table->date_on = JFactory::getDate()->toSql();
+			}
+
+			if (array_key_exists('date_off', $fields))
+			{
+				if (array_key_exists('date_on', $fields))
+				{
+					$startDate = JFactory::getDate($table->date_on);
+					$stopDate = $startDate->modify('+1 days');
+				}
+				else
+				{
+					$stopDate = JFactory::getDate();
+				}
+
+				$table->date_off = $stopDate->toSQL();
+			}
+
+			if (array_key_exists('date_out', $fields))
+			{
+				$table->date_out = $this->getDbo()->getNullDate();
+			}
+
 		}
 	}
 
