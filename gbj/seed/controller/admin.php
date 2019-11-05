@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj
+ * @copyright  (c) 2017-2019 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -26,7 +26,7 @@ class GbjSeedControllerAdmin extends JControllerAdmin
 	public function __construct($config = array())
 	{
 		parent::__construct($config);
-		$this->registerTask('unfeatured', 'featured');
+		$this->registerTask('unfeatured', 'featured', 'clone');
 	}
 
 	/**

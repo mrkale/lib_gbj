@@ -29,6 +29,7 @@ class GbjHelpersCommon
 	const COMMON_URL_VAR_PARENT_ID = 'parentid';
 	const COMMON_URL_VAR_PARENT_TYPE = 'parent';
 	const COMMON_URL_VAR_PARENT_DEL = 'parentdel';
+	const COMMON_URL_VAR_CLONED_ID = 'origid';
 
 	/*
 	 * URL targets:
@@ -634,15 +635,14 @@ class GbjHelpersCommon
 	 * Compose a URL for redirecting to a view
 	 *
 	 * @param   string   $viewName  Name of a view to redirect to.
-	 *                              If not defined, the default one is used.
 	 * @param   integer  $id        Requested record identifier.
 	 *
 	 * @return  string  A full URL to a view.
 	 */
-	public static function getUrlView($viewName = null, $id = null)
+	public static function getUrlView($viewName, $id = null)
 	{
 		$vars = array();
-		$vars['view'] = (is_null($viewName) ? self::HELPER_DEFAULT_VIEW : $viewName);
+		$vars['view'] = $viewName;
 
 		if (!is_null($id))
 		{

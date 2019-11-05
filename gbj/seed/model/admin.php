@@ -193,7 +193,40 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 		{
 			$table = $this->getTable();
 			$fields = $table->getFields();
-			$record = $this->getItem();
+			$origid = $app->input->getInt(Helper::COMMON_URL_VAR_CLONED_ID);
+			$record = $this->getItem($origid);
+
+			// Force data for duplicated record from grid
+			if($origid)
+			{
+				$record->id =  null;
+				$record->state = Helper::COMMON_STATE_UNPUBLISHED;
+
+				if (array_key_exists('title', $fields))
+				{
+					$record->title .= JText::_('LIB_GBJ_CLONE');
+				}
+
+				if (array_key_exists('alias', $fields))
+				{
+					$record->alias .= JText::_('LIB_GBJ_CLONE');
+				}
+
+				if (array_key_exists('date_on', $fields))
+				{
+					$record->date_on = null;
+				}
+
+				if (array_key_exists('date_off', $fields))
+				{
+					$record->date_off = null;
+				}
+
+				if (array_key_exists('date_out', $fields))
+				{
+					$record->date_out = null;
+				}
+			}
 
 			// Default title if required
 			$fieldName = 'title';
@@ -284,7 +317,7 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 	 */
 	protected function prepareTable($table)
 	{
-		$primaryKeyName = $table->getKeyName();
+		$app = JFactory::getApplication();
 		$fields = $table->getFields();
 
 		// Trim all fields
@@ -335,8 +368,9 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 			$table->alias = htmlspecialchars_decode($table->alias, ENT_QUOTES);
 		}
 
-		// Force data to items of a cloned record
-		if ($table->$primaryKeyName == 0 && (int) $table->created > 0)
+		// Force data to items of a cloned record from detail
+		$task = $app->input->get('task');
+		if ($task === 'save2copy')
 		{
 			$table->state = Helper::COMMON_STATE_UNPUBLISHED;
 
@@ -357,17 +391,18 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 
 			if (array_key_exists('date_off', $fields))
 			{
-				if (array_key_exists('date_on', $fields))
-				{
-					$startDate = JFactory::getDate($table->date_on);
-					$stopDate = $startDate->modify('+1 days');
-				}
-				else
-				{
-					$stopDate = JFactory::getDate();
-				}
-
-				$table->date_off = $stopDate->toSQL();
+//				if (array_key_exists('date_on', $fields))
+//				{
+//					$startDate = JFactory::getDate($table->date_on);
+//					$stopDate = $startDate->modify('+1 days');
+//				}
+//				else
+//				{
+//					$stopDate = JFactory::getDate();
+//				}
+//
+//				$table->date_off = $stopDate->toSQL();
+				$table->date_off = $this->getDbo()->getNullDate();
 			}
 
 			if (array_key_exists('date_out', $fields))

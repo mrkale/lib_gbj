@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj
+ * @copyright  (c) 2017-2019 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -45,7 +45,7 @@ class GbjSeedControllerComponent extends JControllerLegacy
 			{
 				$app->enqueueMessage(JText::sprintf('JLIB_APPLICATION_ERROR_UNHELD_ID', $id), 'error');
 				$this->setMessage($this->getError(), 'error');
-				$redirectUrl	= Helper::getUrlView();
+				$redirectUrl = Helper::getUrlView(Helper::plural($editView));
 				$this->setRedirect(JRoute::_($redirectUrl, false));
 
 				return false;

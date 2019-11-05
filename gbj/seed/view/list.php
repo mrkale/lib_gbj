@@ -105,6 +105,12 @@ class GbjSeedViewList extends GbjSeedViewDetail
 			JToolbarHelper::addNew($viewRecord . '.add');
 		}
 
+		// Add an clone button
+		if (!in_array('duplicate', $this->toolbarBlackList))
+		{
+			JToolbarHelper::custom($viewRecord . '.duplicate', 'save-copy', 'save-copy', 'JTOOLBAR_DUPLICATE', true);
+		}
+
 		// Add an edit button
 		if ($canDo->get('core.edit') && !in_array('edit', $this->toolbarBlackList))
 		{
