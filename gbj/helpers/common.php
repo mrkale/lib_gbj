@@ -86,6 +86,9 @@ class GbjHelpersCommon
 	// Session user variable for parent identification
 	const COMMON_SESSION_REFERENCE_PARENTS = 'parents';
 
+	// Session user variable for recent task
+	const COMMON_SESSION_TASK = 'lastTask';
+
 	// Name of parent identity attribute for its current record
 	const COMMON_PARENT_IDENTITY_RECORD = 'record';
 

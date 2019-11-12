@@ -115,14 +115,15 @@ class GbjSeedViewForm extends JViewLegacy
 		$recordTag = JText::sprintf('LIB_GBJ_OLD_RECORD', $this->item->id);
 		$color = $cparams->get('detail_record_tab_color_edit');
 
+		$app = JFactory::getApplication();
+		$lastTask = $app->getUserState(self::getName(Helper::COMMON_SESSION_TASK));
 
 		if (empty($this->item->id))
 		{
 			$recordTag = JText::_('LIB_GBJ_NEW_RECORD');
 			$color = $cparams->get('detail_record_tab_color_new');
 		}
-		elseif ($this->item->checked_out_time == $this->item->created
-			&& $this->item->created == $this->item->modified)
+		elseif ($lastTask === 'save2copy')
 		{
 			$recordTag = JText::sprintf('LIB_GBJ_COPY_RECORD', $this->item->id);
 			$color = $cparams->get('detail_record_tab_color_copy');

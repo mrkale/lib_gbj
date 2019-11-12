@@ -197,9 +197,9 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 			$record = $this->getItem($origid);
 
 			// Force data for duplicated record from grid
-			if($origid)
+			if ($origid)
 			{
-				$record->id =  null;
+				$record->id = null;
 				$record->state = Helper::COMMON_STATE_UNPUBLISHED;
 
 				if (array_key_exists('title', $fields))
@@ -365,11 +365,14 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 				$title = $table->title ?? $this->getNewTitle();
 				$table->alias = JFilterOutput::stringURLSafe($title);
 			}
+
 			$table->alias = htmlspecialchars_decode($table->alias, ENT_QUOTES);
 		}
 
 		// Force data to items of a cloned record from detail
 		$task = $app->input->get('task');
+		$app->setUserState(self::getName(Helper::COMMON_SESSION_TASK), $task);
+
 		if ($task === 'save2copy')
 		{
 			$table->state = Helper::COMMON_STATE_UNPUBLISHED;
@@ -391,17 +394,6 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 
 			if (array_key_exists('date_off', $fields))
 			{
-//				if (array_key_exists('date_on', $fields))
-//				{
-//					$startDate = JFactory::getDate($table->date_on);
-//					$stopDate = $startDate->modify('+1 days');
-//				}
-//				else
-//				{
-//					$stopDate = JFactory::getDate();
-//				}
-//
-//				$table->date_off = $stopDate->toSQL();
 				$table->date_off = $this->getDbo()->getNullDate();
 			}
 
@@ -409,7 +401,6 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 			{
 				$table->date_out = $this->getDbo()->getNullDate();
 			}
-
 		}
 	}
 
