@@ -222,9 +222,19 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 					$record->date_off = null;
 				}
 
+				if (array_key_exists('period', $fields))
+				{
+					$record->period = null;
+				}
+
 				if (array_key_exists('date_out', $fields))
 				{
 					$record->date_out = null;
+				}
+
+				if (array_key_exists('lifespan', $fields))
+				{
+					$record->lifespan = null;
 				}
 			}
 
