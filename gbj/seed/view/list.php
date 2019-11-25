@@ -273,9 +273,10 @@ class GbjSeedViewList extends GbjSeedViewDetail
 		// Date range
 		if (isset($periodStat['min']) && isset($periodStat['max']))
 		{
-			$htmlString .= JText::sprintf(JText::_('LIB_GBJ_STAT_RANGE'), JText::_('LIB_GBJ_STAT_PER'),
+			$htmlString .= JText::sprintf(JText::_('LIB_GBJ_STAT_RANGE_EXT'), JText::_('LIB_GBJ_STAT_PER'),
 				Helper::formatDate($periodStat['min']),
-				Helper::formatDate($periodStat['max'])
+				Helper::formatDate($periodStat['max']),
+				Helper::formatPeriodDates($periodStat['min'], $periodStat['max'])
 			);
 		}
 

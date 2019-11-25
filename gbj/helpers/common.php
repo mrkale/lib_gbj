@@ -1079,7 +1079,7 @@ class GbjHelpersCommon
 			$periodList[] = self::formatNumberUnit($interval->format('%d'), 'LIB_GBJ_FORMAT_DAYS');
 		}
 
-		$period = JText::sprintf('LIB_GBJ_FORMAT_PERIOD_DATE', implode(' ', $periodList));
+		$period = implode(' ', $periodList);
 
 		return $period;
 	}
