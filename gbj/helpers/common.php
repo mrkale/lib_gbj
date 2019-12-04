@@ -996,7 +996,7 @@ class GbjHelpersCommon
 			$formatSeparatorThousands = $formatParams[2] ?? $formatSeparatorThousands;
 		}
 
-		return number_format($number, $formatDecimals,
+		return number_format(floatval($number), $formatDecimals,
 			$formatSeparatorDecimals,
 			$formatSeparatorThousands
 		);
@@ -1017,9 +1017,17 @@ class GbjHelpersCommon
 			return null;
 		}
 
-		$format = $format ?? 'LIB_GBJ_FORMAT_DATE_SHORT';
+		if (self::isEmptyDate($date))
+		{
+			$result = JText::_('LIB_GBJ_NONE_DATE');
+		}
+		else
+		{
+			$format = $format ?? 'LIB_GBJ_FORMAT_DATE_SHORT';
+			$result = JFactory::getDate($date)->format(JText::_($format));
+		}
 
-		return JFactory::getDate($date)->format(JText::_($format));
+		return $result;
 	}
 
 	/**
@@ -1143,7 +1151,7 @@ class GbjHelpersCommon
 	 *
 	 * @return  string  Formatted string with integer value with units.
 	 */
-	public static function formatNumberUnit($number, $langConst)
+	public static function formatNumberUnit($number, $langConst, $formatConst='LIB_GBJ_FORMAT_RECORDS')
 	{
 		if (is_null($number) || is_null($langConst))
 		{
@@ -1151,6 +1159,7 @@ class GbjHelpersCommon
 		}
 
 		$langConst = self::inflectLang($langConst, $number);
+		$number = self::formatNumber($number, $formatConst);
 
 		return JText::sprintf('LIB_GBJ_STAT_VALUE_UNIT', $number, JText::_($langConst));
 	}
