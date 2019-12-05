@@ -160,10 +160,28 @@ if (!$disabled)
 	}
 
 	// Construct element as the tooltip
-	if (!empty($field_value) && is_string($field->getAttribute('tooltip')))
+	if (!empty($field_value))
 	{
-		$field_title = $record->{$field->getAttribute('tooltip')};
-		$field_value = '<span class="hasTooltip" title="' . $field_title . '">' . $field_value . '</span>';
+		$isTooltip = false;
+
+		if ($field_type == 'date')
+		{
+			$now = new JDate;
+			$now = $now->toSQL();
+			$start = $record->$field_name;
+			$field_title = Helper::formatPeriodDates($start, $now);
+			$isTooltip = !empty($field_title);
+		}
+		elseif (is_string($field->getAttribute('tooltip')))
+		{
+			$field_title = $record->{$field->getAttribute('tooltip')};
+			$isTooltip = true;
+		}
+
+		if ($isTooltip)
+		{
+			$field_value = '<span class="hasTooltip" title="' . $field_title . '">' . $field_value . '</span>';
+		}
 	}
 
 	// Suppress default value

@@ -1089,6 +1089,11 @@ class GbjHelpersCommon
 
 		$period = implode(' ', $periodList);
 
+		if (empty($period))
+		{
+			$period = self::formatNumberUnit(0, 'LIB_GBJ_FORMAT_DAYS');
+		}
+
 		return $period;
 	}
 
