@@ -1219,16 +1219,40 @@ class GbjSeedModelList extends JModelList
 		$statList = array('cnt', 'sum', 'avg', 'min', 'max');
 
 		$db	= $this->getDbo();
-		$tableName = $this->getTable()->getTableName();
+		$table = $this->getTable();
+		$tableName = $table->getTableName();
 		$query = $db->getQuery(true)
 			->from($db->quoteName($tableName, 'a'));
 		$query = $this->processQueryFilter($query);
+		$emptyDateTime = $db->getNullDate();
+		$emptyDates = explode(' ', $emptyDateTime);
+		$emptyDate = $emptyDates[0];
+		$emptyTime = $emptyDates[1];
 
 		foreach ($fieldList as $field)
 		{
 			$fields = explode(',', $field);
 			$fieldName = trim($fields[0]);
 			$fieldExpr = $fieldName;
+
+			// Detect date/time field
+			if (array_key_exists($fieldName, $this->gridFields))
+			{
+				$gridField = $this->gridFields[$fieldName];
+				$type = $gridField->getAttribute('type', $fieldName);
+
+				switch ($type)
+				{
+					case 'date':
+						$fieldExpr = 'IF(' . $fieldExpr . '="' . $emptyDate
+							. '",NULL,' . $fieldExpr . ')';
+						break;
+					case 'datetime':
+						$fieldExpr = 'IF(' . $fieldExpr . '="' . $emptyDateTime
+							. '",NULL,' . $fieldExpr . ')';
+						break;
+				}
+			}
 
 			if (isset($fields[1]))
 			{
@@ -1293,12 +1317,35 @@ class GbjSeedModelList extends JModelList
 		$query
 			->where('(' . $db->quoteName($fieldParent) . '>0)')
 			->select('COUNT(*) AS total');
+		$emptyDateTime = $db->getNullDate();
+		$emptyDates = explode(' ', $emptyDateTime);
+		$emptyDate = $emptyDates[0];
+		$emptyTime = $emptyDates[1];
 
 		foreach ($fieldList as $field)
 		{
 			$fields = explode(',', $field);
 			$fieldName = trim($fields[0]);
 			$fieldExpr = $fieldName;
+
+			// Detect date/time field
+			if (array_key_exists($fieldName, $this->gridFields))
+			{
+				$gridField = $this->gridFields[$fieldName];
+				$type = $gridField->getAttribute('type', $fieldName);
+
+				switch ($type)
+				{
+					case 'date':
+						$fieldExpr = 'IF(' . $fieldExpr . '="' . $emptyDate
+							. '",NULL,' . $fieldExpr . ')';
+						break;
+					case 'datetime':
+						$fieldExpr = 'IF(' . $fieldExpr . '="' . $emptyDateTime
+							. '",NULL,' . $fieldExpr . ')';
+						break;
+				}
+			}
 
 			if (isset($fields[1]))
 			{
