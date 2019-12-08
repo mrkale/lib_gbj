@@ -1031,7 +1031,7 @@ class GbjHelpersCommon
 	}
 
 	/**
-	 * Calculate number of days between two dates without the end day.
+	 * Calculate number of days between two dates including start day.
 	 *
 	 * @param   string   $dateStart			Beginning date in MySQL format
 	 * @param   string   $dateStop			Finnish date in MySQL format
@@ -1045,15 +1045,18 @@ class GbjHelpersCommon
 			return null;
 		}
 
+		$increment = new \DateInterval('P1D');
 		$jdateStart = new JDate($dateStart);
+		$jdateStart->sub($increment);
 		$jdateStop = new JDate($dateStop);
 		$interval = date_diff($jdateStart, $jdateStop);
+		$prefix = $interval->invert ? '-' : '';
 
-		return $interval->days;
+		return $prefix . $interval->days;
 	}
 
 	/**
-	 * Format date period between two dates.
+	 * Format date period between two dates including start day.
 	 *
 	 * @param   string   $dateStart			Beginning date in MySQL format
 	 * @param   string   $dateStop			Finnish date in MySQL format
@@ -1067,7 +1070,9 @@ class GbjHelpersCommon
 			return null;
 		}
 
+		$increment = new \DateInterval('P1D');
 		$jdateStart = new JDate($dateStart);
+		$jdateStart->sub($increment);
 		$jdateStop = new JDate($dateStop);
 		$interval = $jdateStart->diff($jdateStop);
 		$periodList = [];
@@ -1127,6 +1132,8 @@ class GbjHelpersCommon
 		{
 			return null;
 		}
+
+		$number = abs($number);
 
 		if (floatval($number) - intval($number))
 		{

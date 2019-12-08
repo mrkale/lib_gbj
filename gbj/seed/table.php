@@ -160,7 +160,6 @@ class GbjSeedTable extends JTable
 		$this->checkDate('date_on');
 		$this->checkDate('date_off');
 		$this->checkDate('date_out');
-		$this->checkDatesReverse();
 
 		// Result
 		if ($this->checkFlag)
