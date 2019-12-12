@@ -490,7 +490,7 @@ class GbjSeedModelList extends JModelList
 		if ($searchParams['type'] == 'date')
 		{
 			$app = JFactory::getApplication();
-			$tz = $app->getCfg('offset');
+			// $tz = $app->getCfg('offset');
 			$dateNull = $this->getDbo()->getNullDate();
 
 			if (empty($searchParams['value']))
@@ -499,7 +499,7 @@ class GbjSeedModelList extends JModelList
 			}
 			else
 			{
-				$jdate = new JDate($searchParams['value'], $tz);
+				$jdate = new JDate($searchParams['value']);
 				$searchParams['value'] = $jdate->toSQL();
 			}
 
@@ -509,7 +509,7 @@ class GbjSeedModelList extends JModelList
 			}
 			else
 			{
-				$jdate = new JDate($searchParams['limit'], $tz);
+				$jdate = new JDate($searchParams['limit']);
 				$searchParams['limit'] = $jdate->toSQL();
 			}
 		}
