@@ -378,14 +378,22 @@ class GbjSeedModelList extends JModelList
 		{
 			if (!empty($searchParams['value']))
 			{
-				$clauseList[] = $db->quoteName($searchParams['name']) . '>='
-				. $db->quote($searchParams['value']);
+				if ($searchParams['type'] != 'date'
+				|| !Helper::isEmptyDate($searchParams['value']))
+				{
+					$clauseList[] = $db->quoteName($searchParams['name']) . '>='
+					. $db->quote($searchParams['value']);
+				}
 			}
 
 			if (!empty($searchParams['limit']))
 			{
-				$clauseList[] = $db->quoteName($searchParams['name']) . '<='
-				. $db->quote($searchParams['limit']);
+				if ($searchParams['type'] != 'date'
+				|| !Helper::isEmptyDate($searchParams['limit']))
+				{
+					$clauseList[] = $db->quoteName($searchParams['name']) . '<='
+					. $db->quote($searchParams['limit']);
+				}
 			}
 
 			$clause = '(' . implode(" AND ", $clauseList) . ')';
