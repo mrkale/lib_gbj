@@ -351,14 +351,7 @@ class GbjSeedModelList extends JModelList
 		$searchParams = $this->getSearchParams($searchValue);
 
 		// Check if the searching is needed
-		if (strlen($searchParams['value']) == 0 && strlen($searchParams['limit']) == 0)
-		{
-			return null;
-		}
-
-		$dateNull = $this->getDbo()->getNullDate();
-
-		if ($searchParams['value'] == $dateNull && $searchParams['limit'] == $dateNull)
+		if (is_null($searchParams['value']) && is_null($searchParams['limit']))
 		{
 			return null;
 		}
@@ -376,31 +369,23 @@ class GbjSeedModelList extends JModelList
 		// Two parameters to search
 		if ($searchParams['range'])
 		{
-			if (!empty($searchParams['value']))
+			if (!is_null($searchParams['value']))
 			{
-				if ($searchParams['type'] != 'date'
-				|| !Helper::isEmptyDate($searchParams['value']))
-				{
-					$clauseList[] = $db->quoteName($searchParams['name']) . '>='
-					. $db->quote($searchParams['value']);
-				}
+				$clauseList[] = $db->quoteName($searchParams['name']) . '>='
+				. $db->quote($searchParams['value']);
 			}
 
-			if (!empty($searchParams['limit']))
+			if (!is_null($searchParams['limit']))
 			{
-				if ($searchParams['type'] != 'date'
-				|| !Helper::isEmptyDate($searchParams['limit']))
-				{
-					$clauseList[] = $db->quoteName($searchParams['name']) . '<='
-					. $db->quote($searchParams['limit']);
-				}
+				$clauseList[] = $db->quoteName($searchParams['name']) . '<='
+				. $db->quote($searchParams['limit']);
 			}
 
 			$clause = '(' . implode(" AND ", $clauseList) . ')';
 		}
 
 		// One parameter to search
-		else
+		elseif (!is_null($searchParams['value']))
 		{
 			switch ($searchParams['type'])
 			{
@@ -494,28 +479,20 @@ class GbjSeedModelList extends JModelList
 			$searchParams['range'] = true;
 		}
 
+		// Sanitize values
+		$searchParams['value'] = empty($searchParams['value']) ? null : $searchParams['value'];
+		$searchParams['limit'] = empty($searchParams['limit']) ? null : $searchParams['limit'];
+
 		// Convert date field
 		if ($searchParams['type'] == 'date')
 		{
-			$app = JFactory::getApplication();
-			// $tz = $app->getCfg('offset');
-			$dateNull = $this->getDbo()->getNullDate();
-
-			if (empty($searchParams['value']))
-			{
-				$searchParams['value'] = $dateNull;
-			}
-			else
+			if (!is_null($searchParams['value']))
 			{
 				$jdate = new JDate($searchParams['value']);
 				$searchParams['value'] = $jdate->toSQL();
 			}
 
-			if (empty($searchParams['limit']))
-			{
-				$searchParams['limit'] = $dateNull;
-			}
-			else
+			if (!is_null($searchParams['limit']))
 			{
 				$jdate = new JDate($searchParams['limit']);
 				$searchParams['limit'] = $jdate->toSQL();
