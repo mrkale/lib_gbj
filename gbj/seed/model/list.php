@@ -1158,6 +1158,38 @@ class GbjSeedModelList extends JModelList
 					$this->setFilterQueryMonth($filterField, $query, $dataField);
 					break;
 
+				case 'yearout':
+					if (is_object($this->filterForm))
+					{
+						$dataField = $this->filterForm->getFieldAttribute(
+							$filterField, 'datafield', 'date_out', 'filter'
+						);
+					}
+					else
+					{
+						$gridField = $this->gridFields[$filterField];
+						$dataField = $gridField->getAttribute('datafield', 'date_out');
+					}
+
+					$this->setFilterQueryYear($filterField, $query, $dataField);
+					break;
+
+				case 'monthout':
+					if (is_object($this->filterForm))
+					{
+						$dataField = $this->filterForm->getFieldAttribute(
+							$filterField, 'datafield', 'date_out', 'filter'
+						);
+					}
+					else
+					{
+						$gridField = $this->gridFields[$filterField];
+						$dataField = $gridField->getAttribute('datafield', 'date_out');
+					}
+
+					$this->setFilterQueryMonth($filterField, $query, $dataField);
+					break;
+
 				// Process fields by an attribute
 				default:
 					if (is_object($this->filterForm))
