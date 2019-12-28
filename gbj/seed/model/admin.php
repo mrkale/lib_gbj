@@ -249,15 +249,13 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 			// Generate alias if required; preferably from title
 			$fieldName = 'alias';
 
-			if (array_key_exists($fieldName, $fields) && empty($record->$fieldName))
+			if (array_key_exists($fieldName, $fields)
+			&& empty($record->$fieldName)
+			&& $this->isXmlRequired($fieldName))
 			{
-				if ($this->isXmlRequired($fieldName))
-				{
-					$default = $this->getXmlDefault($fieldName);
-					$title = $record->alias ?? $default ?? $record->title;
-					$record->$fieldName = JFilterOutput::stringURLSafe($title);
-					;
-				}
+				$default = $this->getXmlDefault($fieldName);
+				$title = $record->alias ?? $default ?? $record->title;
+				$record->$fieldName = JFilterOutput::stringURLSafe($title);
 			}
 
 			// Generate start date if required; preferably as current date
@@ -370,7 +368,7 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 		if (array_key_exists('alias', $fields))
 		{
 			// Generate new
-			if (empty($table->alias))
+			if (empty($table->alias) && $this->getXmlDefaulted('alias'))
 			{
 				$title = $table->title ?? $this->getNewTitle();
 				$table->alias = JFilterOutput::stringURLSafe($title);
@@ -586,6 +584,22 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 			->getAttribute('default');
 
 		return $default;
+	}
+
+	/**
+	 * Extract defaulted flag from the form field in the XML form.
+	 *
+	 * @param   string   $fieldName   The name of a form field.
+	 *
+	 * @return boolean   Flag from defaulted in the form.
+	 */
+	protected function getXmlDefaulted($fieldName)
+	{
+		$defaulted = $this->getForm(null, false)
+			->getField($fieldName)
+			->getAttribute('defaulted', 'true');
+
+		return filter_var($defaulted, FILTER_VALIDATE_BOOLEAN);
 	}
 
 	/**

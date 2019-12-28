@@ -155,6 +155,7 @@ if (!$disabled)
 			break;
 
 		case 'code-value':
+		default:
 			$field_value = empty($field_value) ? null : $field_value;
 			break;
 	}
