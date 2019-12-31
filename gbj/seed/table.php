@@ -221,7 +221,7 @@ class GbjSeedTable extends JTable
 	 * @param   array $fieldList   List of field name and values for searching a record(s).
 	 * @param   array $keyList     List of field name and values for primary key(s).
 	 *
-	 * @return void
+	 * @return boolean  True if there are more records with provided fields.
 	 */
 	protected function isDuplicateRecord($fieldList, $keyList)
 	{
