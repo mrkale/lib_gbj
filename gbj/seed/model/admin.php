@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017-2019 Libor Gabaj
+ * @copyright  (c) 2017-2020 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -202,6 +202,10 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 				$record->id = null;
 				$record->state = Helper::COMMON_STATE_UNPUBLISHED;
 
+				// Component parameters
+				$cparams = JComponentHelper::getParams(Helper::getName());
+				$flagDateNew = !boolval($cparams->get('date_clone'));
+
 				if (array_key_exists('title', $fields))
 				{
 					$record->title .= JText::_('LIB_GBJ_CLONE');
@@ -212,17 +216,17 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 					$record->alias .= JText::_('LIB_GBJ_CLONE');
 				}
 
-				if (array_key_exists('date_on', $fields))
+				if (array_key_exists('date_on', $fields) && $flagDateNew)
 				{
 					$record->date_on = null;
 				}
 
-				if (array_key_exists('date_off', $fields))
+				if (array_key_exists('date_off', $fields) && $flagDateNew)
 				{
 					$record->date_off = null;
 				}
 
-				if (array_key_exists('date_out', $fields))
+				if (array_key_exists('date_out', $fields) && $flagDateNew)
 				{
 					$record->date_out = null;
 				}
@@ -385,6 +389,10 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 		{
 			$table->state = Helper::COMMON_STATE_UNPUBLISHED;
 
+			// Component parameters
+			$cparams = JComponentHelper::getParams(Helper::getName());
+			$flagDateNew = !boolval($cparams->get('date_clone'));
+
 			if (array_key_exists('title', $fields))
 			{
 				$table->title .= JText::_('LIB_GBJ_CLONE');
@@ -395,17 +403,17 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 				$table->alias .= JText::_('LIB_GBJ_CLONE');
 			}
 
-			if (array_key_exists('date_on', $fields))
+			if (array_key_exists('date_on', $fields) && $flagDateNew)
 			{
 				$table->date_on = JFactory::getDate()->toSql();
 			}
 
-			if (array_key_exists('date_off', $fields))
+			if (array_key_exists('date_off', $fields) && $flagDateNew)
 			{
 				$table->date_off = $this->getDbo()->getNullDate();
 			}
 
-			if (array_key_exists('date_out', $fields))
+			if (array_key_exists('date_out', $fields) && $flagDateNew)
 			{
 				$table->date_out = $this->getDbo()->getNullDate();
 			}
