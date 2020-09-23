@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj
+ * @copyright  (c) 2017-2020 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -95,6 +95,8 @@ else
 }
 ?>
 
-<?php if ($fieldCount) : ?>
+<?php if ($fieldCount)
+:
+?>
 <th<?php echo $tableTags; ?>><?php echo $tableData; ?></th>
 <?php endif;

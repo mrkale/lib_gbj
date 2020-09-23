@@ -57,26 +57,40 @@ if ($tparams->get('show_pagedescription'))
 ?>
 <div class="<?php echo Helper::getExtensionCore() . $pageclass_sfx; ?>">
 	<h1>
-		<?php if ($tparams->get('show_pageicon')) : ?>
-		<span class="<?php echo $tparams->get('pageicon_class'); ?>"></span>
-		<?php endif; ?>
-	<?php if ($this->isParent()): ?>
-		<a href="<?php echo $agendaLink; ?>"><?php echo $parentPrefix; ?></a>
-		<?php echo JText::_('LIB_GBJ_TITLE_SEPARATOR'); ?>
-		<?php echo $parentTitle; ?>
-	<?php else: ?>
-		<?php echo $parentPrefix; ?>
-	<?php endif; ?>
+<?php if ($tparams->get('show_pageicon'))
+:
+?>
+<span class="<?php echo $tparams->get('pageicon_class'); ?>"></span>
+<?php endif; ?>
+
+<?php if ($this->isParent())
+:
+?>
+	<a href="<?php echo $agendaLink; ?>"><?php echo $parentPrefix; ?></a>
+	<?php echo JText::_('LIB_GBJ_TITLE_SEPARATOR'); ?>
+	<?php echo $parentTitle; ?>
+
+<?php else
+:
+?>
+	<?php echo $parentPrefix; ?>
+<?php endif; ?>
 	</h1>
-	<?php if (!empty($description)): ?>
-	<div>
-		<h4>
-			<?php echo $description; ?>
-		</h4>
-	</div>
-	<?php endif; ?>
-	<?php if ($this->isParent()): ?>
-	<h2><?php echo $agendaTitle; ?></h2>
-	<?php endif; ?>
-	<?php echo $this->loadTemplate('items'); ?>
+
+<?php if (!empty($description))
+:
+?>
+<div>
+	<h4>
+		<?php echo $description; ?>
+	</h4>
+</div>
+<?php endif; ?>
+
+<?php if ($this->isParent())
+:
+?>
+<h2><?php echo $agendaTitle; ?></h2>
+<?php endif; ?>
+<?php echo $this->loadTemplate('items'); ?>
 </div>

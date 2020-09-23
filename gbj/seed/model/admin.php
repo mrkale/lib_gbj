@@ -250,8 +250,8 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 			$fieldName = 'alias';
 
 			if (array_key_exists($fieldName, $fields)
-			&& empty($record->$fieldName)
-			&& $this->isXmlRequired($fieldName))
+				&& empty($record->$fieldName)
+				&& $this->isXmlRequired($fieldName))
 			{
 				$default = $this->getXmlDefault($fieldName);
 				$title = $record->alias ?? $default ?? $record->title;

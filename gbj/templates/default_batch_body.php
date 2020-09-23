@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj
+ * @copyright  (c) 2017-2020 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -35,7 +35,8 @@ foreach ($batchFields as $fieldName => $fieldForms)
 	$controlGroup = '<div class="control-group span6"><div class="controls">';
 	$controlGroup .= JLayoutHelper::render('grid.field',
 		array('field' => $fieldName, 'list' => $fieldForms['options'] ?? null),
-		Helper::getLayoutBase());
+		Helper::getLayoutBase()
+	);
 	$controlGroup .= '</div></div>';
 
 	if ($fieldNum % 2 == 0)

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Component
- * @copyright  (c) 2017-2019 Libor Gabaj
+ * @copyright  (c) 2017-2020 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -1036,7 +1036,7 @@ class GbjHelpersCommon
 	 * @param   string   $dateStart			Beginning date in MySQL format
 	 * @param   string   $dateStop			Finnish date in MySQL format
 	 *
-	 * @return  int   Number of days within the period.
+	 * @return  integer  Number of days within the period.
 	 */
 	public static function calculatePeriodDays($dateStart, $dateStop)
 	{
@@ -1075,7 +1075,7 @@ class GbjHelpersCommon
 		$jdateStart->sub($increment);
 		$jdateStop = new JDate($dateStop);
 		$interval = $jdateStart->diff($jdateStop);
-		$periodList = [];
+		$periodList = array();
 
 		if ($interval->y)
 		{
@@ -1158,8 +1158,9 @@ class GbjHelpersCommon
 	/**
 	 * Format number and its unit grammatically.
 	 *
-	 * @param   decimal  $number      Number to be formatted.
-	 * @param   string   $langConst   Language constant for 'many' amount.
+	 * @param   decimal  $number        Number to be formatted.
+	 * @param   string   $langConst     Language constant for 'many' amount.
+	 * @param   string   $formatConst   Language constant for number formatting.
 	 *
 	 * @return  string  Formatted string with integer value with units.
 	 */

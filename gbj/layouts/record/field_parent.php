@@ -2,7 +2,7 @@
 
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj
+ * @copyright  (c) 2017-2020 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -21,5 +21,5 @@ if ($displayData->isParent() && is_object($field))
 	$form->setFieldAttribute($fieldName, 'class', $class);
 	$form->setFieldAttribute($fieldName, 'readonly', 'true');
 }
-?>
-<?php echo $field ? $form->renderField($fieldName) : ''; ?>
+
+echo $field ? $form->renderField($fieldName) : '';

@@ -13,6 +13,8 @@ $layoutBasePath = Helper::getLayoutBase();
 
 // Injected option
 $options = $this->getOptions();
-$options->set('url', true);	// Default url is the field value
+
+// Default url is the field value
+$options->set('url', true);
 
 echo JLayoutHelper::render('grid.items', $displayData, $layoutBasePath, $options);

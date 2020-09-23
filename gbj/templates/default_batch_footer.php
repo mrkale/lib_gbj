@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017-2018 Libor Gabaj
+ * @copyright  (c) 2017-2020 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -32,6 +32,7 @@ foreach ($batchFields as $fieldName)
 {
 	$onclick .= "document.getElementById('batch-" . $fieldName . "-id').value='';";
 }
+
 $batchEvent = Helper::singular($this->getName()) . '.batch';
 ?>
 <button class="btn" type="button" onclick="<?php echo $onclick; ?>" data-dismiss="modal">

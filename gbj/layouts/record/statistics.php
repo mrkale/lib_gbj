@@ -2,7 +2,7 @@
 /**
  * @package     Joomla.Library
  * @subpackage  Layout
- * @copyright  (c) 2018-2019 Libor Gabaj
+ * @copyright  (c) 2018-2020 Libor Gabaj
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  * @since       3.8
  */
@@ -14,7 +14,9 @@ defined('_JEXEC') or die;
 $options = $this->getOptions();
 $statistics = $options->get('statistics');
 ?>
-<?php foreach ($statistics as $name => $value): ?>
+<?php foreach ($statistics as $name => $value)
+:
+?>
 <dt><?php echo $name; ?></dt>
 <dd><?php echo $value ?? 0; ?></dd>
 <?php endforeach;

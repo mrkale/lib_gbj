@@ -2,7 +2,7 @@
 /**
  * @package     Joomla.Library
  * @subpackage  Layout
- * @copyright  (c) 2017-2019 Libor Gabaj
+ * @copyright  (c) 2017-2020 Libor Gabaj
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  * @since       3.8
  */
@@ -14,16 +14,16 @@ $record = $displayData->item;
 
 // Options
 $options = $this->getOptions();
-$field_name = $options->get('field');
-$field_url = $options->get('url');
+$fieldName = $options->get('field');
+$fieldUrl = $options->get('url');
 
 // The field not registered
-if (!isset($displayData->gridFields[$field_name]))
+if (!isset($displayData->gridFields[$fieldName]))
 {
 	return;
 }
 
-$field = $displayData->gridFields[$field_name];
+$field = $displayData->gridFields[$fieldName];
 
 // XML attribute - flag about disabling an element - default FALSE
 $disabled = strtoupper($field->getAttribute('disabled') ?? 'FALSE') === 'TRUE';
@@ -88,7 +88,7 @@ if (!$disabled)
 
 	// XML attribute - Force value from data field
 	$fieldData = $field->getAttribute('datafield');
-	$field_value = $record->$fieldData ?? $record->$field_name;
+	$fieldValue = $record->$fieldData ?? $record->$fieldName;
 
 	$renderTag = $displayData->htmlAttribute('class', $field->getAttribute('labelclass'))
 		. $displayData->htmlAttribute('width', $field->getAttribute('width'));
@@ -96,37 +96,37 @@ if (!$disabled)
 	$renderHeader = JText::_($field->getAttribute('label'));
 
 	// If url option is true, replace it with field value
-	if (is_bool($field_url) && $field_url)
+	if (is_bool($fieldUrl) && $fieldUrl)
 	{
-		$field_url = $field_value;
+		$fieldUrl = $fieldValue;
 	}
 
 	// Formatting by element type
-	$field_type = $field->getAttribute('type');
+	$fieldType = $field->getAttribute('type');
 
-	if (is_null($field_type) && Helper::isCodedField($field_name))
+	if (is_null($fieldType) && Helper::isCodedField($fieldName))
 	{
-		$field_type = "code-value";
+		$fieldType = "code-value";
 	}
 
-	switch ($field_type)
+	switch ($fieldType)
 	{
 		case 'date':
-			if (Helper::isEmptyDate($field_value))
+			if (Helper::isEmptyDate($fieldValue))
 			{
-				$field_value = null;
+				$fieldValue = null;
 			}
-			elseif (isset($field_value))
+			elseif (isset($fieldValue))
 			{
 				if (!is_null($gridFormat))
 				{
-					$field_value = JHtml::_('date', $field_value, JText::_($gridFormat));
+					$fieldValue = JHtml::_('date', $fieldValue, JText::_($gridFormat));
 				}
 
 				// Highlight future date
 				$dateCompareFormat = "Ymd";
 
-				if (JFactory::getDate($record->$field_name)->format($dateCompareFormat) > JFactory::getDate()->format($dateCompareFormat))
+				if (JFactory::getDate($record->$fieldName)->format($dateCompareFormat) > JFactory::getDate()->format($dateCompareFormat))
 				{
 					$cparams = JComponentHelper::getParams(Helper::getName());
 					$renderTag = $displayData->htmlAttribute('class', $cparams->get('future_row_class'));
@@ -138,12 +138,12 @@ if (!$disabled)
 		case 'number':
 			if (is_null($gridFormat))
 			{
-				$field_value = is_null($field_value) ? null : floatval($field_value);
+				$fieldValue = is_null($fieldValue) ? null : floatval($fieldValue);
 			}
 			else
 			{
-				$field_value = Helper::formatNumber(
-					$field_value,
+				$fieldValue = Helper::formatNumber(
+					$fieldValue,
 					JText::_($gridFormat)
 				);
 			}
@@ -151,37 +151,37 @@ if (!$disabled)
 			break;
 
 		case 'user':
-			$field_value = JFactory::getUser($field_value)->username;
+			$fieldValue = JFactory::getUser($fieldValue)->username;
 			break;
 
 		case 'code-value':
 		default:
-			$field_value = empty($field_value) ? null : $field_value;
+			$fieldValue = empty($fieldValue) ? null : $fieldValue;
 			break;
 	}
 
 	// Construct element as the tooltip
-	if (!empty($field_value))
+	if (!empty($fieldValue))
 	{
 		$isTooltip = false;
 
-		if ($field_type == 'date')
+		if ($fieldType == 'date')
 		{
 			$now = new JDate;
 			$now = $now->toSQL();
-			$start = $record->$field_name;
-			$field_title = Helper::formatPeriodDates($start, $now);
-			$isTooltip = !empty($field_title);
+			$start = $record->$fieldName;
+			$fieldTitle = Helper::formatPeriodDates($start, $now);
+			$isTooltip = !empty($fieldTitle);
 		}
 		elseif (is_string($field->getAttribute('tooltip')))
 		{
-			$field_title = $record->{$field->getAttribute('tooltip')};
+			$fieldTitle = $record->{$field->getAttribute('tooltip')};
 			$isTooltip = true;
 		}
 
 		if ($isTooltip)
 		{
-			$field_value = '<span class="hasTooltip" title="' . $field_title . '">' . $field_value . '</span>';
+			$fieldValue = '<span class="hasTooltip" title="' . $fieldTitle . '">' . $fieldValue . '</span>';
 		}
 	}
 
@@ -194,23 +194,25 @@ if (!$disabled)
 	// Displayed value, prefix, and suffix
 	$renderData = $gridDefaultValue;
 
-	if (isset($field_value) && !is_null($field_value))
+	if (isset($fieldValue) && !is_null($fieldValue))
 	{
-		$renderData = $gridPrefix . $field_value . $gridSuffix;
+		$renderData = $gridPrefix . $fieldValue . $gridSuffix;
 	}
 
 	// Construct element as the hypertext
-	if (!is_null($field_url))
+	if (!is_null($fieldUrl))
 	{
 		$renderData = '<a href="'
-			. JRoute::_($field_url)
+			. JRoute::_($fieldUrl)
 			. '">'
 			. $renderData
 			. '</a>';
 	}
 }
 ?>
-<?php if (!$disabled) : ?>
+<?php if (!$disabled)
+:
+?>
 <dt <?php echo $renderTag; ?>><?php echo $renderHeader; ?></dt>
 <dd><?php echo $renderData; ?></dd>
 <?php endif;

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017 Libor Gabaj
+ * @copyright  (c) 2017-2020 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -55,7 +55,7 @@ class GbjSeedControllerForm extends JControllerForm
 	/**
 	 * Method to duplicate the first selected record.
 	 *
-	 * @return  void
+	 * @return  boolean   True if successful, false otherwise and internal error is set.
 	 */
 	public function duplicate()
 	{

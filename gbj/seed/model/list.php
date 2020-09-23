@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017-2019 Libor Gabaj
+ * @copyright  (c) 2017-2020 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -276,7 +276,7 @@ class GbjSeedModelList extends JModelList
 	 *
 	 * @param   object  $query   Query to be extended.
 	 *
-	 * @return  void  The extended query for chaining.
+	 * @return  string  The extended query for chaining.
 	 */
 	protected function extendQuery($query)
 	{
@@ -987,7 +987,7 @@ class GbjSeedModelList extends JModelList
 	 * @param   object   $form      Filter form
 	 * @param   boolean  $loadData  Load current data
 	 *
-	 * @return  Array with filter form fields with resolved subforms
+	 * @return  array  Array with filter form fields with resolved subforms
 	 *
 	 * @since   3.2
 	 */
