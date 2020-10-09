@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017-2019 Libor Gabaj
+ * @copyright  (c) 2017-2020 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -12,12 +12,19 @@ defined('_JEXEC') or die;
 use Joomla\String\Normalise;
 
 /**
- * General controller methods for the list of records in an agenda.
+ * General controller methods for processing list of records in an agenda.
  *
  * @since  3.8
  */
 class GbjSeedControllerAdmin extends JControllerAdmin
 {
+	/**
+	 * The current agenda view name.
+	 *
+	 * @var string
+	 */
+	private $viewName;
+
 	/**
 	 * Constructor.
 	 *
@@ -26,7 +33,8 @@ class GbjSeedControllerAdmin extends JControllerAdmin
 	public function __construct($config = array())
 	{
 		parent::__construct($config);
-		$this->registerTask('unfeatured', 'featured', 'clone');
+		$this->registerTask('unfeatured', 'featured');
+		$this->viewName = $this->input->get('view', '', 'word');
 	}
 
 	/**
@@ -61,13 +69,12 @@ class GbjSeedControllerAdmin extends JControllerAdmin
 
 		$user   = JFactory::getUser();
 		$ids    = $this->input->get('cid', array(), 'array');
-		$viewName = $this->input->get('view', '', 'word');
 		$values = array('featured' => 1, 'unfeatured' => 0);
 		$task   = $this->getTask();
 		$value  = JArrayHelper::getValue($values, $task, 0, 'int');
 
 		// Get the model
-		$model = $this->getModel(Helper::singular($viewName));
+		$model = $this->getModel(Helper::singular($this->viewName));
 
 		// Access checks
 		foreach ($ids as $i => $id)
@@ -79,7 +86,7 @@ class GbjSeedControllerAdmin extends JControllerAdmin
 				// Prune items that you can't change.
 				unset($ids[$i]);
 				$app->enqueueMessage(JText::_('JLIB_APPLICATION_ERROR_EDITCOMMON_STATE_NOT_PERMITTED'), 'notice');
-				$this->setRedirect(Helper::getUrlView($viewName));
+				$this->setRedirect(Helper::getUrlView($this->viewName));
 
 				return;
 			}
@@ -89,12 +96,12 @@ class GbjSeedControllerAdmin extends JControllerAdmin
 		if (!$model->featured($ids, $value))
 		{
 			$app->enqueueMessage($model->getError(), 'warning');
-			$this->setRedirect(Helper::getUrlView($viewName));
+			$this->setRedirect(Helper::getUrlView($this->viewName));
 
 			return;
 		}
 
-		$this->setRedirect(Helper::getUrlView($viewName));
+		$this->setRedirect(Helper::getUrlView($this->viewName));
 	}
 
 	/**
@@ -109,8 +116,7 @@ class GbjSeedControllerAdmin extends JControllerAdmin
 		// Check for request forgeries
 		JSession::checkToken() or jexit(JText::_('JINVALID_TOKEN'));
 
-		$viewName = $this->input->get('view', '', 'word');
-		$parentType = Helper::singular($viewName);
+		$parentType = Helper::singular($this->viewName);
 		$ids = $this->input->get('cid', array(), 'array');
 		JArrayHelper::toInteger($ids);
 		$parentId = $ids[0];
@@ -134,6 +140,27 @@ class GbjSeedControllerAdmin extends JControllerAdmin
 
 		// Go to parent view without parent filter
 		$parts = explode(' ', Normalise::fromCamelCase($method));
-		$this->setRedirect(Helper::getUrlViewParentDel(strtolower(end($parts)), $this->input->getWord('view')));
+		$this->setRedirect(Helper::getUrlViewParentDel(strtolower(end($parts)), $this->viewName));
+	}
+
+	/**
+	 * Typical view method for MVC based architecture
+	 *
+	 * This function is provide as a default implementation, in most cases
+	 * you will need to override it in your own controllers.
+	 *
+	 * @param   boolean  $cachable   If true, the view output will be cached
+	 * @param   array    $urlparams  An array of safe URL parameters and their variable types, for valid values see {@link \JFilterInput::clean()}.
+	 *
+	 * @return  \JControllerLegacy  A \JControllerLegacy object to support chaining.
+	 *
+	 * @since   3.0
+	 */
+	public function display($cachable = false, $urlparams = array())
+	{
+		parent::display($cachable, $urlparams);
+		JRequest::setVar('task', '');
+
+		return $this;
 	}
 }

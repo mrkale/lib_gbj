@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017-2019 Libor Gabaj
+ * @copyright  (c) 2017-2020 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -73,6 +73,8 @@ class GbjSeedViewList extends GbjSeedViewDetail
 		}
 
 		parent::display($tpl);
+
+		$this->setDocument();
 	}
 
 	/**
@@ -96,7 +98,7 @@ class GbjSeedViewList extends GbjSeedViewDetail
 			$title .= $this->model->parent->title . JText::_('LIB_GBJ_TITLE_SEPARATOR');
 		}
 
-		$title .= JText::_(strtoupper($component . '_' . $viewList));
+		$title .= JText::_(strtoupper(Helper::getName($viewList, '_')));
 		JToolbarHelper::title($title);
 
 		// Add an add button
@@ -177,14 +179,23 @@ class GbjSeedViewList extends GbjSeedViewDetail
 			$bar->appendButton('Custom', $dhtml, 'batch');
 		}
 
+		// Add an export button
+		if (!in_array('export', $this->toolbarBlackList)
+			&& $canDo->get('core.edit'))
+		{
+			// Dedicated button to start subcontroller with format='raw'
+			$toolbar	= JToolbar::getInstance('toolbar');
+			$toolbar->addButtonPath(JPATH_COMPONENT_ADMINISTRATOR . '/button');
+			$toolbar->appendButton('RawFormat', 'download', 'JTOOLBAR_EXPORT', 'download.export', false);
+		}
+
 		// Add an exit button
 		if ($this->isParent() && !in_array('exit', $this->toolbarBlackList))
 		{
-			$viewName = $this->getName();
-			$langConst = strtoupper(Helper::getName($viewName, '_'));
+			$langConst = strtoupper(Helper::getName($viewList, '_'));
 			$action = '.enter' . Helper::proper(Helper::plural($this->model->parentType));
 			JToolbarHelper::custom(
-				$viewName . $action,
+				$viewList . $action,
 				'exit.png',
 				'exit-2.png',
 				JText::_('LIB_GBJ_BUTTON_EXIT') . JText::_($langConst),
@@ -203,6 +214,26 @@ class GbjSeedViewList extends GbjSeedViewDetail
 		JHtmlSidebar::setAction(Helper::getUrlView($this->getName()));
 		Helper::addSubmenu($this->getName());
 		$this->sidebar = JHtmlSidebar::render();
+	}
+
+	/**
+	 * Method to set up the document properties.
+	 * Preferrably it load the script for raw export.
+	 *
+	 * @return void
+	 */
+	protected function setDocument()
+	{
+		$scriptParts = array(
+			JFactory::getApplication()->isClient('administrator') ? '..' : '.',
+			'media',
+			Helper::getExtensionName(),
+			'js',
+			'rawformatsubmitbutton.js'
+		);
+		$script = implode(DIRECTORY_SEPARATOR, $scriptParts);
+		$document	= JFactory::getDocument();
+		$document->addScript($script);
 	}
 
 	/**

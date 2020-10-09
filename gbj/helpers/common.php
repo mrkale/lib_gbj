@@ -105,6 +105,12 @@ class GbjHelpersCommon
 	const COMMON_HTML_COPYRIGHT = '&copy;';
 	const COMMON_HTML_TRADEMARK = '&reg;';
 
+	// Text file parameters
+	const COMMON_FILE_CSV_TYPE = 'csv';
+	const COMMON_FILE_CSV_MEDIATYPE = 'text/csv';
+	const COMMON_FILE_CSV_DELIMITER = ';';
+	const COMMON_FILE_NAME_DELIMITER = '_';
+
 	/**
 	 * Convert input string into the proper form, which means the first letter
 	 * capitalized and remaining ones in lowercase form.
@@ -635,6 +641,24 @@ class GbjHelpersCommon
 	}
 
 	/**
+	 * Compose a URL for redirecting to a raw view.
+	 *
+	 * @param   string  $viewName    Name of a child view to redirect to.
+	 *
+	 * @return  string  A full URL to a view.
+	 */
+	public static function getUrlViewRaw($viewName)
+	{
+		$vars = array();
+		$vars['view'] = $viewName;
+		$vars['format'] = 'raw';
+		$vars['layout'] = 'default_raw';
+		$url = self::getUrl($vars);
+
+		return $url;
+	}
+
+	/**
 	 * Compose a URL for redirecting to a view
 	 *
 	 * @param   string   $viewName  Name of a view to redirect to.
@@ -896,7 +920,7 @@ class GbjHelpersCommon
 				. DIRECTORY_SEPARATOR
 				. 'media'
 				. DIRECTORY_SEPARATOR
-				. Helper::getName(array('css', 'site.css'), DIRECTORY_SEPARATOR);
+				. self::getName(array('css', 'site.css'), DIRECTORY_SEPARATOR);
 			$document->addStyleSheet($cssFile);
 		}
 
