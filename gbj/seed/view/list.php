@@ -181,7 +181,8 @@ class GbjSeedViewList extends GbjSeedViewDetail
 
 		// Add an export button
 		if (!in_array('export', $this->toolbarBlackList)
-			&& $canDo->get('core.edit'))
+			&& $canDo->get('core.edit')
+			&& $this->checkTemplate('raw'))
 		{
 			// Dedicated button to start subcontroller with format='raw'
 			$toolbar	= JToolbar::getInstance('toolbar');
@@ -225,7 +226,7 @@ class GbjSeedViewList extends GbjSeedViewDetail
 	protected function setDocument()
 	{
 		$scriptParts = array(
-			JFactory::getApplication()->isClient('administrator') ? '..' : '.',
+			JURI::root(),
 			'media',
 			Helper::getExtensionName(),
 			'js',
@@ -319,5 +320,53 @@ class GbjSeedViewList extends GbjSeedViewDetail
 		}
 
 		return $htmlString;
+	}
+
+	/**
+	 * Check a template existance.
+	 *
+	 * @param   string  $tpl  The name of the template source file.
+	 *
+	 * @return  boolean  The flag determining that a template exists.
+	 *
+	 * @since   3.0
+	 */
+	public function checkTemplate($tpl = null)
+	{
+		$template = \JFactory::getApplication()->getTemplate();
+		$layout = $this->getLayout();
+		$layoutTemplate = $this->getLayoutTemplate();
+		$tmplPath = $this->_path['template'];
+
+		// Create the template file name based on the layout
+		$file = isset($tpl) ? $layout . '_' . $tpl : $layout;
+
+		// Clean the file name
+		$file = preg_replace('/[^A-Z0-9_\.-]/i', '', $file);
+		$tpl = isset($tpl) ? preg_replace('/[^A-Z0-9_\.-]/i', '', $tpl) : $tpl;
+
+		// Change the template folder if alternative layout is in different template
+		if (isset($layoutTemplate) && $layoutTemplate !== '_' && $layoutTemplate != $template)
+		{
+			$tmplPath = str_replace(
+				JPATH_THEMES . DIRECTORY_SEPARATOR . $template,
+				JPATH_THEMES . DIRECTORY_SEPARATOR . $layoutTemplate,
+				tmplPath
+			);
+		}
+
+		// Load the template script
+		jimport('joomla.filesystem.path');
+		$filetofind = $this->_createFileName('template', array('name' => $file));
+		$tmplFile = \JPath::find($tmplPath, $filetofind);
+
+		// If alternate layout can't be found, fall back to default layout
+		if ($tmplFile == false)
+		{
+			$filetofind = $this->_createFileName('', array('name' => 'default' . (isset($tpl) ? '_' . $tpl : $tpl)));
+			$tmplFile = \JPath::find($tmplPath, $filetofind);
+		}
+
+		return boolval($tmplFile);
 	}
 }

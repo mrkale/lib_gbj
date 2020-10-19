@@ -35,10 +35,4 @@ foreach ($this->items as $this->item)
 	$content .= PHP_EOL;
 }
 
-// Convert content
-if ($this->flagConvert)
-{
-	$content = iconv($this->_charset, 'Windows-1250', $content);
-}
-
 echo $content;

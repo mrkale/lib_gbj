@@ -26,7 +26,5 @@ if (strtoupper($field->getAttribute('disabled') ?? 'FALSE') === 'TRUE'
 	return;
 }
 
-// Output field header
-$fieldData = trim(JText::_($field->getAttribute('label')));
-$fieldData = '"' . $fieldData . '"' . Helper::COMMON_FILE_CSV_DELIMITER;
-echo $fieldData;
+$fieldValue = trim(JText::_($field->getAttribute('label')));
+echo $displayData->sanitize($fieldValue);

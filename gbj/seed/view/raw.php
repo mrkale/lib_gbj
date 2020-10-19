@@ -53,6 +53,9 @@ class GbjSeedViewRaw extends JViewLegacy
 		// Component parameters
 		$cparams = JComponentHelper::getParams(Helper::getName());
 		$this->flagConvert = boolval($cparams->get('export_convert'));
+		$this->flagCodeTitle = boolval($cparams->get('export_longcodes'));
+		$this->charsetOrig = $this->_charset;
+		$this->charsetOut = $this->flagConvert ? 'Windows-1250' : $this->charsetOrig;
 
 		// Agenda data
 		$this->model = $this->getModel();
@@ -73,16 +76,44 @@ class GbjSeedViewRaw extends JViewLegacy
 		// Export file
 		$document = JFactory::getDocument();
 		$document->setMimeEncoding($mimetype);
-		$charset = $this->flagConvert ? 'iso-8859-2' : 'utf-8';
 		JFactory::getApplication()
-		-> setHeader('Content-Type', 'application/cvs; charset=' . $charset, true)
+		-> setHeader('Content-Type', 'application/cvs; charset=' . $this->charsetOut, true)
 		-> setHeader('Content-Disposition', 'attachment; filename="'
-		. $basename . '.' . $filetype, true)
+			. $basename . '.' . $filetype, true
+		)
 		-> setHeader('Content-Transfer-Encoding', 'binary', true)
 		-> setHeader('creation-date', $filedate, true)
 		-> setHeader('Expires', '0', true)
 		-> setHeader('Pragma', 'no-cache', true);
 
 		parent::display($tpl);
+	}
+
+	/**
+	 * Method to sanitize and terminace an agenda record field for CSV.
+	 *
+	 * @param   string  $fieldValue  The value of a field.
+	 *
+	 * @return  string  Sanitized field value
+	 */
+	public function sanitize($fieldValue = null)
+	{
+		// Sanitize value
+		$fieldValue = html_entity_decode($fieldValue);
+		$fieldValue = htmlspecialchars_decode($fieldValue);
+		$fieldValue = strip_tags($fieldValue, '<br>');
+		$fieldValue = preg_replace('/\t/', '', $fieldValue);
+		$fieldValue = str_replace(PHP_EOL, "\n", $fieldValue);
+		$fieldValue = str_replace('<br>', "\n", $fieldValue);
+		$fieldValue = trim($fieldValue);
+
+		// Convert content encoding
+		if ($this->flagConvert)
+		{
+			$fieldValue = iconv($this->charsetOrig, $this->charsetOut, $fieldValue);
+		}
+
+		// Output field value
+		return '"' . $fieldValue . '"' . Helper::COMMON_FILE_CSV_DELIMITER;
 	}
 }

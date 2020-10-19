@@ -77,6 +77,13 @@ foreach ($variantFields as $variantNum => $variantFieldName)
 	if (is_null($fieldType) && Helper::isCodedField($variantFieldName))
 	{
 		$fieldType = "code-value";
+
+		// Force code title instead its alias
+		if ($displayData->flagCodeTitle)
+		{
+			$codeTitle = str_replace('_alias', '_title', $fieldData ?? $variantFieldName);
+			$variantFieldValue = $record->$codeTitle ?? $variantFieldValue;
+		}
 	}
 
 	switch ($fieldType)
@@ -88,10 +95,14 @@ foreach ($variantFields as $variantNum => $variantFieldName)
 			}
 			elseif (isset($variantFieldValue))
 			{
-				if (!is_null($gridFormat))
-				{
-					$variantFieldValue = JHtml::_('date', $variantFieldValue, JText::_($gridFormat));
-				}
+				// Force short date format
+				$gridFormat = $gridFormat ?? 'LIB_GBJ_FORMAT_DATE_SHORT';
+				$gridFormat = str_replace(
+					array('LIB_GBJ_FORMAT_DATE_LONG', 'LIB_GBJ_FORMAT_DATE_SHORT_DAY'),
+					'LIB_GBJ_FORMAT_DATE_SHORT',
+					$gridFormat
+				);
+				$variantFieldValue = JHtml::_('date', $variantFieldValue, JText::_($gridFormat));
 			}
 
 			break;
@@ -137,6 +148,4 @@ if ($allEmptyVariants)
 	$fieldValue = null;
 }
 
-// Displayed value, prefix, and suffix
-$fieldData = '"' . strip_tags($fieldValue) . '"' . Helper::COMMON_FILE_CSV_DELIMITER;
-echo $fieldData;
+echo $displayData->sanitize($fieldValue);
