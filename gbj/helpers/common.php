@@ -54,6 +54,7 @@ class GbjHelpersCommon
 	const COMMON_LAYOUT_DEFAULT = 'default';
 
 	// Layouts relative base paths
+	const COMMON_HELPER_BASEDIR = 'helpers';
 	const COMMON_LAYOUT_BASEDIR = 'layouts';
 	const COMMON_LAYOUT_SUBDIR_BATCH = 'batch';
 	const COMMON_LAYOUT_SUBDIR_ADMIN = 'administrator';
@@ -478,7 +479,7 @@ class GbjHelpersCommon
 	{
 		$prefix = strtolower(
 			(boolval($useRealPrefix) ? JFactory::getApplication()->get('dbprefix') : self::COMMON_TABLE_PREFIX)
-			. Helper::getClassPrefix() . '_'
+			. self::getClassPrefix() . '_'
 		);
 
 		return $prefix;
@@ -795,7 +796,7 @@ class GbjHelpersCommon
 		$tableSuffix = '_' . self::plural($baseName);
 		$prefixes = array(
 			Helper::HELPER_CODEBOOK_TABLE_PREFIX,
-			Helper::getClassPrefix(),
+			self::getClassPrefix(),
 		);
 
 		foreach ($prefixes as $prefix)
@@ -826,13 +827,38 @@ class GbjHelpersCommon
 
 		if ($full)
 		{
-			$dir = $path;
+			$dir = str_replace(DIRECTORY_SEPARATOR, '/', $path);
 		}
 		else
 		{
 			$dirs = explode(DIRECTORY_SEPARATOR, $path);
 			$dir = end($dirs);
 		}
+
+		return $dir;
+	}
+
+	/**
+	 * Determine the media type directory root path.
+	 *
+	 * @param   string  $file  File name with extension (css|js...)
+	 *
+	 * @return   string   Media file path or null
+	 */
+	public static function getMediaFile($file)
+	{
+		$parts = explode('.', $file);
+		$fileExt = strtolower(end($parts));
+		$fileName = prev($parts);
+
+		if (!in_array($fileExt, array('css', 'js')))
+		{
+			return null;
+		}
+
+		$file = implode('.', array($fileName, $fileExt));
+		$dir = JUri::root(true) . '/media/'
+			. self::getName(array($fileExt, $file), '/');
 
 		return $dir;
 	}
@@ -878,6 +904,22 @@ class GbjHelpersCommon
 	}
 
 	/**
+	 * Launch custom CSS.
+	 *
+	 * @param   string  $file  The name and extension of a css file.
+	 *
+	 * @return void
+	 */
+	public static function launchCSS($file)
+	{
+		if (!is_null($cssFile = self::getMediaFile($file)))
+		{
+			$document = JFactory::getDocument();
+			$document->addStyleSheet($cssFile);
+		}
+	}
+
+	/**
 	 * Create and launch main controller.
 	 *
 	 * @return void
@@ -912,16 +954,11 @@ class GbjHelpersCommon
 			);
 
 			// Load backend as well as frontend language constants for current language
-			JFactory::getLanguage()->load(Helper::getName(), JPATH_COMPONENT_ADMINISTRATOR);
-			JFactory::getLanguage()->load(Helper::getName(), JPATH_COMPONENT_SITE, null, true);
+			JFactory::getLanguage()->load(self::getName(), JPATH_COMPONENT_ADMINISTRATOR);
+			JFactory::getLanguage()->load(self::getName(), JPATH_COMPONENT_SITE, null, true);
 
-			$document = JFactory::getDocument();
-			$cssFile = '.'
-				. DIRECTORY_SEPARATOR
-				. 'media'
-				. DIRECTORY_SEPARATOR
-				. self::getName(array('css', 'site.css'), DIRECTORY_SEPARATOR);
-			$document->addStyleSheet($cssFile);
+			// Load frontend cascade style sheet
+			self::launchCSS('site.css');
 		}
 
 		$controller	= JControllerLegacy::getInstance(self::getClassPrefix());

@@ -9,6 +9,9 @@
 // No direct access
 defined('_JEXEC') or die;
 
+Helper::launchCSS('admin.css');
+
+
 /**
  * View for handling records of an agenda
  *
@@ -186,7 +189,10 @@ class GbjSeedViewList extends GbjSeedViewDetail
 		{
 			// Dedicated button to start subcontroller with format='raw'
 			$toolbar	= JToolbar::getInstance('toolbar');
-			$toolbar->addButtonPath(JPATH_COMPONENT_ADMINISTRATOR . '/button');
+			$buttonPath = Helper::getLibraryDir(true)
+			 . DIRECTORY_SEPARATOR
+			 . Helper::COMMON_HELPER_BASEDIR;
+			$toolbar->addButtonPath($buttonPath);
 			$toolbar->appendButton('RawFormat', 'download', 'JTOOLBAR_EXPORT', 'download.export', false);
 		}
 
@@ -225,16 +231,10 @@ class GbjSeedViewList extends GbjSeedViewDetail
 	 */
 	protected function setDocument()
 	{
-		$scriptParts = array(
-			JURI::root(),
-			'media',
-			Helper::getExtensionName(),
-			'js',
-			'rawformatsubmitbutton.js'
-		);
-		$script = implode(DIRECTORY_SEPARATOR, $scriptParts);
-		$document	= JFactory::getDocument();
-		$document->addScript($script);
+		if (!is_null($script = Helper::getMediaFile('rawformatsubmitbutton.js')))
+		{
+			JFactory::getDocument()->addScript($script);
+		}
 	}
 
 	/**
