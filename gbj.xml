@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+@package     Joomla.Component
+@copyright   (c) 2017-2020 Libor Gabaj
+@license     GNU General Public License version 2 or later; see LICENSE.txt
+@since       3.8
+-->
 <extension type="library" version="3.8" method="upgrade">
     <name>LIB_GBJ</name>
     <libraryname>gbj</libraryname>
     <description>LIB_GBJ_XML_DESCRIPTION</description>
-    <creationDate>June 2019</creationDate>
+    <creationDate>October 2020</creationDate>
     <author>Libor Gabaj</author>
     <authorEmail>libor.gabaj@gmail.com</authorEmail>
     <authorUrl>https://github.com/mrkaleJoomla/lib_gbj.git</authorUrl>

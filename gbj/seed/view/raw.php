@@ -42,6 +42,17 @@ class GbjSeedViewRaw extends JViewLegacy
 	}
 
 	/**
+	 * Method to compose export CSV file's base name.
+	 * It can be overriden for specific base names.
+	 *
+	 * @return  string
+	 */
+	protected function getRawBasename()
+	{
+		return JText::_(strtoupper(Helper::getName($this->getName(), '_')));
+	}
+
+	/**
 	 * Method to display an agenda records.
 	 *
 	 * @param   string  $tpl  The name of the template file to parse.
@@ -67,7 +78,8 @@ class GbjSeedViewRaw extends JViewLegacy
 		$timezone = JFactory::getUser()->getTimezone();
 		$format = 'Ymd' . Helper::COMMON_FILE_NAME_DELIMITER . 'Hi';
 		$namesfx = JFactory::getDate()->setTimezone($timezone)->format($format, true);
-		$basename = JText::_(strtoupper(Helper::getName($this->getName(), '_')));
+		$basename = $this->getRawBasename();
+		$basename = str_replace(' ', Helper::COMMON_FILE_NAME_DELIMITER, $basename);
 		$basename .= Helper::COMMON_FILE_NAME_DELIMITER . $namesfx;
 		$mimetype = Helper::COMMON_FILE_CSV_MEDIATYPE;
 		$filetype = Helper::COMMON_FILE_CSV_TYPE;

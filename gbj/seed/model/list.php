@@ -276,7 +276,7 @@ class GbjSeedModelList extends JModelList
 	 *
 	 * @param   object  $query   Query to be extended.
 	 *
-	 * @return  string  The extended query for chaining.
+	 * @return  object  The extended query for chaining.
 	 */
 	protected function extendQuery($query)
 	{

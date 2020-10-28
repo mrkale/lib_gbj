@@ -841,24 +841,28 @@ class GbjHelpersCommon
 	/**
 	 * Determine the media type directory root path.
 	 *
-	 * @param   string  $file  File name with extension (css|js...)
+	 * @param   string  $file   File name with extension as the implicit type
+	 * @param   string  $type   Explicite file type (css|js...)
 	 *
 	 * @return   string   Media file path or null
 	 */
-	public static function getMediaFile($file)
+	public static function getMediaFile($file, $type = null)
 	{
-		$parts = explode('.', $file);
-		$fileExt = strtolower(end($parts));
-		$fileName = prev($parts);
+		if (is_null($type))
+		{
+			$parts = explode('.', $file);
+			$type = end($parts);
+		}
 
-		if (!in_array($fileExt, array('css', 'js')))
+		$type = strtolower($type);
+
+		if (!in_array($type, array('css', 'js')))
 		{
 			return null;
 		}
 
-		$file = implode('.', array($fileName, $fileExt));
 		$dir = JUri::root(true) . '/media/'
-			. self::getName(array($fileExt, $file), '/');
+			. self::getName(array($type, $file), '/');
 
 		return $dir;
 	}
