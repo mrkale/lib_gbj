@@ -9,6 +9,7 @@
 // No direct access
 defined('_JEXEC') or die;
 
+
 /**
  * View for handling records of an agenda, usually just first of them
  *

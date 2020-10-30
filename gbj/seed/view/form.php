@@ -9,6 +9,8 @@
 // No direct access
 defined('_JEXEC') or die;
 
+Helper::launchCSS('admin.css');
+
 /**
  * View for handling one record of agenda.
  *
