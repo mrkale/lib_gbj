@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017-2019 Libor Gabaj
+ * @copyright  (c) 2017-2020 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -70,7 +70,9 @@ foreach ($fieldList as $fieldIdx => $fieldName)
 
 				if ($prefixValue == $prefixItem)	// No language constants
 				{
-					$prefixValue = $record->$prefixItem ?? JText::_('LIB_GBJ_NONE_PREFIX');
+					$prefixDefault = strtoupper($field->getAttribute('prefix-defaulted') ?? 'TRUE') === 'TRUE' ?
+						JText::_('LIB_GBJ_NONE_PREFIX') : '';
+					$prefixValue = $record->$prefixItem ?? $prefixDefault;
 				}
 
 				$prefixList[$i] = $prefixValue;
@@ -93,7 +95,9 @@ foreach ($fieldList as $fieldIdx => $fieldName)
 
 				if ($suffixValue == $suffixItem)	// No language constants
 				{
-					$suffixValue = $record->$suffixItem ?? JText::_('LIB_GBJ_NONE_SUFFIX');
+					$suffixDefault = strtoupper($field->getAttribute('suffix-defaulted') ?? 'TRUE') === 'TRUE' ?
+						JText::_('LIB_GBJ_NONE_SUFFIX') : '';
+					$suffixValue = $record->$suffixItem ?? $suffixDefault;
 				}
 
 				$suffixList[$i] = $suffixValue;

@@ -758,7 +758,7 @@ class GbjSeedModelList extends JModelList
 	 * Set filter for a field to the model query.
 	 *
 	 * @param   string   $fieldName    Name of filtered field.
-	 * @param   object   $query		   Model query object for enrichment.
+	 * @param   object   $query        Model query object for enrichment.
 	 * @param   string   $columnName   Column name if different from field name.
 	 *
 	 * @return   object  Query object for chaining.
@@ -771,14 +771,20 @@ class GbjSeedModelList extends JModelList
 
 		if (is_numeric($fieldValue))
 		{
-			$query->where('(' . $db->quoteName($columnName) . '=' . (int) $fieldValue . ')'
+			$query->where(
+				'('
+				. $db->quoteName($columnName) . '=' . (int) $fieldValue
+				. ')'
 			);
 		}
 		elseif (is_array($fieldValue))
 		{
-			$fieldValue = ArrayHelper::toInteger($fieldValue);
-			$fieldValue = implode(',', $fieldValue);
-			$query->where('(' . $db->quoteName($columnName)	. ' IN (' . $fieldValue . '))');
+			if (count($fieldValue) > 1 || $fieldValue[0] !== '')
+			{
+				$fieldValue = ArrayHelper::toInteger($fieldValue);
+				$fieldValue = implode(',', $fieldValue);
+				$query->where('(' . $db->quoteName($columnName)	. ' IN (' . $fieldValue . '))');
+			}
 		}
 
 		return $query;
@@ -1066,7 +1072,11 @@ class GbjSeedModelList extends JModelList
 						// Default filtering
 						if ($app->isClient('site'))
 						{
-							$query->where($db->quoteName($filterField) . '=' . Helper::COMMON_STATE_PUBLISHED);
+							$query->where(
+								'('
+								. $db->quoteName($filterField) . '=' . Helper::COMMON_STATE_PUBLISHED
+								. ')'
+							);
 						}
 						else
 						{
