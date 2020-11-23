@@ -139,13 +139,13 @@ class GbjSeedViewList extends GbjSeedViewDetail
 			// Add a featured button
 			if (!in_array('featured', $this->toolbarBlackList))
 			{
-				JToolbarHelper::custom($viewList . '.featured', 'featured.png', 'featured.png', 'JFEATURE', true);
+				JToolbarHelper::custom($viewList . '.featured', 'featured.png', 'featured.png', 'LIB_GBJ_FEATURE', true);
 			}
 
 			// Add an unfeatured button
 			if (!in_array('unfeatured', $this->toolbarBlackList))
 			{
-				JToolbarHelper::custom($viewList . '.unfeatured', 'unfeatured.png', 'unfeatured.png', 'JUNFEATURE', true);
+				JToolbarHelper::custom($viewList . '.unfeatured', 'unfeatured.png', 'unfeatured.png', 'LIB_GBJ_UNFEATURE', true);
 			}
 
 			// Add an archive button
