@@ -198,9 +198,9 @@ foreach ($fieldList as $fieldIdx => $fieldName)
 						}
 
 						// Highlight future date
-						$dateCompareFormat = "Ymd";
+						$dateCompareFormat = JFactory::getDbo()->getDateFormat();
 
-						if (JFactory::getDate($record->$fieldName)->format($dateCompareFormat) > JFactory::getDate()->format($dateCompareFormat))
+						if (Helper::getSqlDateTime($record->$fieldName) > Helper::getSqlDateTime())
 						{
 							$flagFutureDate = true;
 						}

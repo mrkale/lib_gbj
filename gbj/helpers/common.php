@@ -1299,14 +1299,24 @@ class GbjHelpersCommon
 
 	/**
 	 * Generate current local datetime in SQL format.
+	 * If there is no input parameter, function returns current datetime.
+	 * If input parameter is provided and it is empty date null, function returns
+	 * it as is.
 	 *
-	 * @param   object  $datetime   Datetime to convert to SQL format.
+	 * @param   any  $datetime   Datetime to convert to SQL format.
 	 *
 	 * @return  string  SQL formated local datetime
 	 */
 	public static function getSqlDateTime($datetime = 'now')
 	{
 		$timezone = JFactory::getUser()->getTimezone();
+		$dtNull = JFactory::getDbo()->getNullDate();
+
+		if (self::isEmptyDate($datetime))
+		{
+			return $datetime;
+		}
+
 		$dtString = JFactory::getDate($datetime)->setTimezone($timezone)->toSQL(true);
 
 		return $dtString;
