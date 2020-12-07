@@ -265,10 +265,12 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 			// Generate start date if required; preferably as current date
 			$fieldName = 'date_on';
 
-			if (array_key_exists($fieldName, $fields) && empty($record->$fieldName)
-				&& $this->isXmlRequired($fieldName))
+			if (array_key_exists($fieldName, $fields)
+				&& $this->isXmlRequired($fieldName)
+				&& Helper::isEmptyDate($record->$fieldName)
+			)
 			{
-				$record->$fieldName = JFactory::getDate()->toSQL();
+				$record->$fieldName = Helper::getSqlDateTime();
 			}
 
 			/*
@@ -277,26 +279,24 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 			 */
 			$fieldName = 'date_off';
 
-			if (array_key_exists($fieldName, $fields) && empty($record->$fieldName)
-				&& $this->isXmlRequired($fieldName))
+			if (array_key_exists($fieldName, $fields)
+				&& $this->isXmlRequired($fieldName)
+				&& Helper::isEmptyDate($record->$fieldName)
+			)
 			{
 				$fieldStart = 'date_on';
+				$stopDate = 'now';
 
 				if (array_key_exists($fieldStart, $fields)
 					&& !empty($record->$fieldStart)
-					&& JFactory::getDate($record->$fieldStart)->toUnix() >= 0
+					&& JFactory::getDate($record->$fieldStart)->toUnix() !== null
 				)
 				{
 					$startDate = JFactory::getDate($record->$fieldStart);
 					$stopDate = $startDate->modify('+1 days');
-					$record->$fieldName = $stopDate->toSQL();
-				}
-				else
-				{
-					$stopDate = JFactory::getDate();
 				}
 
-				$record->$fieldName = $stopDate->toSQL();
+				$record->$fieldName = Helper::getSqlDateTime($stopDate);
 			}
 
 			// Set the first parent identifier if any
@@ -349,7 +349,7 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 					// Sanitize datetime string
 					if ($table->$fieldName)
 					{
-						$table->$fieldName = JFactory::getDate($table->$fieldName)->toSql();
+						$table->$fieldName = Helper::getSqlDateTime($table->$fieldName);
 					}
 					else
 					{
@@ -405,17 +405,17 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 
 			if (array_key_exists('date_on', $fields) && $flagDateNew)
 			{
-				$table->date_on = JFactory::getDate()->toSql();
+				$table->date_on = Helper::getSqlDateTime();
 			}
 
 			if (array_key_exists('date_off', $fields) && $flagDateNew)
 			{
-				$table->date_off = $this->getDbo()->getNullDate();
+				$table->date_off = null;
 			}
 
 			if (array_key_exists('date_out', $fields) && $flagDateNew)
 			{
-				$table->date_out = $this->getDbo()->getNullDate();
+				$table->date_out = null;
 			}
 		}
 	}

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017-2019 Libor Gabaj
+ * @copyright  (c) 2017-2020 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -93,6 +93,7 @@ class GbjSeedTable extends JTable
 
 	/**
 	 * Method to store a row in the database from the JTable instance properties.
+	 * All datetime fields are in UTC.
 	 *
 	 * @param   boolean  $updateNulls  True to update fields even if they are null.
 	 *
@@ -360,7 +361,7 @@ class GbjSeedTable extends JTable
 		}
 
 		// Warn that the date is in the future
-		if (JFactory::getDate($this->$fieldName)->toSql() > JFactory::getDate()->toSql())
+		if (Helper::getSqlDateTime($this->$fieldName) > Helper::getSqlDateTime())
 		{
 			$this->checkWarning = true;
 			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_FUTURE_DATE');

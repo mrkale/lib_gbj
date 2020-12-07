@@ -1070,7 +1070,7 @@ class GbjHelpersCommon
 	/**
 	 * Format datetime to a formatted string.
 	 *
-	 * @param   string   $date       Date or datetime to be formatted.
+	 * @param   object   $date       Date or datetime to be formatted.
 	 * @param   string   $format     Formatting string, default for standard date
 	 *
 	 * @return  string   Formatted number as a string.
@@ -1168,19 +1168,19 @@ class GbjHelpersCommon
 	}
 
 	/**
-	 * Check if a date is empty or zeroed.
+	 * Check if a datetime is empty or zeroed.
 	 *
-	 * @param   date   $dateValue   Date value.
+	 * @param   object   $dateValue   Datetimetime value.
 	 *
-	 * @return  boolean  Flag about empty date.
+	 * @return  boolean  Flag about empty datetime.
 	 */
 	public static function isEmptyDate($dateValue)
 	{
-		$dateNull = JFactory::getDbo()->getNullDate();
-		$dateNull = JFactory::getDate($dateNull)->toISO8601();
-		$dateIso  = JFactory::getDate($dateValue)->toISO8601();
+		$dtNull = JFactory::getDbo()->getNullDate();
 
-		return empty($dateValue) || $dateIso == $dateNull;
+		return empty($dateValue)
+			|| $dtNull == $dateValue
+			|| strpos($dtNull, $dateValue) !== false;
 	}
 
 	/**
@@ -1295,5 +1295,20 @@ class GbjHelpersCommon
 		}
 
 		return $fieldData;
+	}
+
+	/**
+	 * Generate current local datetime in SQL format.
+	 *
+	 * @param   object  $datetime   Datetime to convert to SQL format.
+	 *
+	 * @return  string  SQL formated local datetime
+	 */
+	public static function getSqlDateTime($datetime = 'now')
+	{
+		$timezone = JFactory::getUser()->getTimezone();
+		$dtString = JFactory::getDate($datetime)->setTimezone($timezone)->toSQL(true);
+
+		return $dtString;
 	}
 }
