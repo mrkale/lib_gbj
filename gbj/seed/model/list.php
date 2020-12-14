@@ -387,20 +387,22 @@ class GbjSeedModelList extends JModelList
 		// One parameter to search
 		elseif (!is_null($searchParams['value']))
 		{
+			$column = $db->quoteName($searchParams['name']);
+
 			switch ($searchParams['type'])
 			{
-				case 'string':
 				case 'text':
+					$column = 'decode_html(clean_text(' . $column . '))';
+				case 'string':
 				case 'coded':
 					$wildcard = (strpos($searchValue, '%') || strpos($searchValue, '_') ? '' : '%');
-					$clause = '(' . $db->quoteName($searchParams['name']) . ' LIKE '
+					$clause = '(' . $column . ' LIKE '
 						. $db->quote($wildcard . $searchParams['value'] . $wildcard)
 						. ')';
 					break;
 
 				default:
-					$clause = '(' . $db->quoteName($searchParams['name']) . '='
-						. $db->quote($searchParams['value']) . ')';
+					$clause = '(' . $column . '=' . $db->quote($searchParams['value']) . ')';
 					break;
 			}
 		}

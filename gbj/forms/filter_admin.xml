@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 @package    Joomla.Library
-@copyright  (c) 2019 Libor Gabaj
+@copyright  (c) 2019-2020 Libor Gabaj
 @license    GNU General Public License version 2 or later; see LICENSE.txt
 @since      3.8
 -->
@@ -11,7 +11,7 @@
 
         <field
             name="search"
-            type="text"
+            type="string"
             label="JSEARCH_FILTER_LABEL"
             description="LIB_GBJ_SEARCH_VALUE_DESC"
             hint="JSEARCH_FILTER"
