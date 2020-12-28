@@ -6,37 +6,32 @@
 @since      3.8
 -->
 <form>
+	<fields name="filter">
 
-    <fields name="filter">
+		<field
+				name="search"
+				type="string"
+				label="JSEARCH_FILTER_LABEL"
+				description="LIB_GBJ_SEARCH_VALUE_DESC"
+				hint="JSEARCH_FILTER"
+				class="js-stools-search-string"
+				noresults="JGLOBAL_NO_MATCHING_RESULTS" />
 
-        <field
-            name="search"
-            type="string"
-            label="JSEARCH_FILTER_LABEL"
-            description="LIB_GBJ_SEARCH_VALUE_DESC"
-            hint="JSEARCH_FILTER"
-            class="js-stools-search-string"
-            noresults="JGLOBAL_NO_MATCHING_RESULTS"
-        />
+		<field
+				name="state"
+				type="status"
+				onchange="this.form.submit();">
+			<option value="">JOPTION_SELECT_PUBLISHED</option>
+		</field>
 
-        <field
-            name="state"
-            type="status"
-            onchange="this.form.submit();"
-        >
-            <option value="">JOPTION_SELECT_PUBLISHED</option>
-        </field>
+		<field
+				name="featured"
+				type="list"
+				onchange="this.form.submit();">
+			<option value="">LIB_GBJ_SELECT_FEATURED</option>
+			<option value="1">LIB_GBJ_FEATURED</option>
+			<option value="0">LIB_GBJ_UNFEATURED</option>
+		</field>
 
-        <field
-            name="featured"
-            type="list"
-            onchange="this.form.submit();"
-        >
-            <option value="">LIB_GBJ_SELECT_FEATURED</option>
-            <option value="1">LIB_GBJ_FEATURED</option>
-            <option value="0">LIB_GBJ_UNFEATURED</option>
-        </field>
-
-    </fields>
-
+	</fields>
 </form>

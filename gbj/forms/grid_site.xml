@@ -8,9 +8,21 @@
 <form>
 	<fieldset name="gridfields">
 
-		<field name="description" type="text" label="JGLOBAL_DESCRIPTION" defaulted="false"></field>
+		<field
+				name="description"
+				type="text"
+				label="JGLOBAL_DESCRIPTION"
+				defaulted="false"></field>
 
-		<field name="sequence" type="seqno" label="LIB_GBJ_FIELD_SEQNO" width="1%" labelclass="hidden-phone" class="center hidden-phone" sorted="false" searchable="false" />
+		<field
+				name="sequence"
+				type="seqno"
+				label="LIB_GBJ_FIELD_SEQNO"
+				width="1%"
+				labelclass="hidden-phone"
+				class="center hidden-phone"
+				sorted="false"
+				searchable="false" />
 
 	</fieldset>
 </form>

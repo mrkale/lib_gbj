@@ -346,10 +346,10 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 				case 'date':
 				case 'datetime':
 				case 'timestamp':
-					// Sanitize datetime string
+					// Sanitize datetime string - do not recalculate for timezone, just reformat
 					if ($table->$fieldName)
 					{
-						$table->$fieldName = Helper::getSqlDateTime($table->$fieldName);
+						$table->$fieldName = JFactory::getDate($table->$fieldName)->toSql();
 					}
 					else
 					{
