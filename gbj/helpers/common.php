@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Component
- * @copyright  (c) 2017-2020 Libor Gabaj
+ * @copyright  (c) 2017-2021 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -1309,14 +1309,13 @@ class GbjHelpersCommon
 	 */
 	public static function getSqlDateTime($datetime = 'now')
 	{
-		$timezone = JFactory::getUser()->getTimezone();
-		$dtNull = JFactory::getDbo()->getNullDate();
-
 		if (self::isEmptyDate($datetime))
 		{
 			return $datetime;
 		}
 
+		$timezone = JFactory::getUser()->getTimezone();
+		$dtNull = JFactory::getDbo()->getNullDate();
 		$dtString = JFactory::getDate($datetime)->setTimezone($timezone)->toSQL(true);
 
 		return $dtString;

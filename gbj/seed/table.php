@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017-2020 Libor Gabaj
+ * @copyright  (c) 2017-2021 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -361,7 +361,7 @@ class GbjSeedTable extends JTable
 		}
 
 		// Warn that the date is in the future
-		if (Helper::getSqlDateTime($this->$fieldName) > Helper::getSqlDateTime())
+		if ($this->$fieldName > Helper::getSqlDateTime())
 		{
 			$this->checkWarning = true;
 			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_FUTURE_DATE');
