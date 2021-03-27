@@ -1,7 +1,7 @@
 <?php
 /**
  * @package    Joomla.Library
- * @copyright  (c) 2017-2020 Libor Gabaj
+ * @copyright  (c) 2017-2021 Libor Gabaj
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * @since      3.8
  */
@@ -347,13 +347,18 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 				case 'datetime':
 				case 'timestamp':
 					// Sanitize datetime string - do not recalculate for timezone, just reformat
-					if ($table->$fieldName)
+					$dateNull = $this->getDbo()->getNullDate();
+
+					if ($table->$fieldName === '')
 					{
-						$table->$fieldName = JFactory::getDate($table->$fieldName)->toSql();
+						$table->$fieldName = $dateNull;
 					}
 					else
 					{
-						$table->$fieldName = $this->getDbo()->getNullDate();
+						if ($table->$fieldName !== $dateNull)
+						{
+							$table->$fieldName = JFactory::getDate($table->$fieldName)->toSql();
+						}
 					}
 					break;
 
