@@ -128,14 +128,14 @@ class GbjSeedTable extends JTable
 			$this->created_by = $userId;
 		}
 
-		// Set publish_up to null date if not set
-		if (!$this->publish_up)
+		// Set publish start to null date if not set
+		if (!$this->publish_up || $this->publish_up < $this->created)
 		{
 			$this->publish_up = $dateNull;
 		}
 
-		// Set publish_down to null date if not set
-		if (!$this->publish_down)
+		// Set publish end to null date if not set or equal to start date
+		if (!$this->publish_down || $this->publish_down <= $this->publish_up)
 		{
 			$this->publish_down = $dateNull;
 		}

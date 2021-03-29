@@ -349,7 +349,7 @@ abstract class GbjSeedModelAdmin extends JModelAdmin
 					// Sanitize datetime string - do not recalculate for timezone, just reformat
 					$dateNull = $this->getDbo()->getNullDate();
 
-					if ($table->$fieldName === '')
+					if (Helper::isEmptyDate($table->$fieldName))
 					{
 						$table->$fieldName = $dateNull;
 					}
