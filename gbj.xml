@@ -9,13 +9,13 @@
     <name>LIB_GBJ</name>
     <libraryname>gbj</libraryname>
     <description>LIB_GBJ_XML_DESCRIPTION</description>
-    <creationDate>March 2021</creationDate>
+    <creationDate>June 2021</creationDate>
     <author>Libor Gabaj</author>
     <authorEmail>libor.gabaj@gmail.com</authorEmail>
     <authorUrl>https://github.com/mrkaleJoomla/lib_gbj.git</authorUrl>
     <copyright>(c) 2017-2021, Libor Gabaj</copyright>
     <license>GNU GPLv2 or later</license>
-    <version>1.4.0</version>
+    <version>1.5.0</version>
     <packager>Libor Gabaj</packager>
     <packagerurl></packagerurl>
 

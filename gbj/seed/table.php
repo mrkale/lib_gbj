@@ -19,12 +19,21 @@ use Joomla\String\Normalise;
 class GbjSeedTable extends JTable
 {
 	/**
-	 * @var   array	 List of error messages language constants for checking.
-	 *				 The key is usually a checked field name or concatenation
-	 *				 of more fields with dot.
-	 * .
+	 * List of error messages language constants for checking.
+	 * The key is usually a checked field name or concatenation of more
+	 * fields with dot.
+	 *
+	 * @var   array
 	 */
 	protected $errorMsgs = array();
+
+	/**
+	 * List of core names of checking procedures (without prefix 'check')
+	 * that should be ignored in core checks.
+	 *
+	 * @var   array
+	 */
+	protected $checkIgnores = array();
 
 	/**
 	 * The flag determining the overall success of the check method.
@@ -155,12 +164,27 @@ class GbjSeedTable extends JTable
 	 */
 	public function check()
 	{
-		$this->checkTitleDate();
-		$this->checkAlias();
-		$this->checkEmpty();
-		$this->checkDate('date_on');
-		$this->checkDate('date_off');
-		$this->checkDate('date_out');
+		if (!in_array('TitleDateDomain', $this->checkIgnores))
+		{
+			$this->checkTitleDateDomain();
+		}
+
+		if (!in_array('Alias', $this->checkIgnores))
+		{
+			$this->checkAlias();
+		}
+
+		if (!in_array('Empty', $this->checkIgnores))
+		{
+			$this->checkEmpty();
+		}
+
+		if (!in_array('Date', $this->checkIgnores))
+		{
+			$this->checkDate('date_on');
+			$this->checkDate('date_off');
+			$this->checkDate('date_out');
+		}
 
 		// Result
 		if ($this->checkFlag)
@@ -176,7 +200,7 @@ class GbjSeedTable extends JTable
 	}
 
 	/**
-	 * Raise error of warning.
+	 * Raise error or warning.
 	 *
 	 * At finish the warning flag and internally set exception message are reset.
 	 *
@@ -316,6 +340,55 @@ class GbjSeedTable extends JTable
 			$fieldName = $fieldTitle . '.' . $fieldDate;
 			$this->checkWarning = true;
 			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_UNIQUE_TITLEDATE');
+		}
+	}
+
+	/**
+	 * Check the validity of the set of title, date, and domain field.
+	 *
+	 * @param   string $fieldTitle    The name of a field with title.
+	 * @param   string $fieldDate     The name of a field with date.
+	 * @param   string $fieldDomain   The name of a field with domain.
+	 *
+	 * @return void
+	 */
+	protected function checkTitleDateDomain(
+		$fieldTitle = 'title',
+		$fieldDate = 'date_on',
+		$fieldDomain = 'id_domain'
+	)
+	{
+		// Title field is not used
+		if (!isset($this->$fieldTitle) || empty($this->$fieldTitle))
+		{
+			return;
+		}
+
+		// Date field is not used
+		if (!isset($this->$fieldDate) || Helper::isEmptyDate($this->$fieldDate))
+		{
+			return;
+		}
+
+		// Domain field is not used
+		if (!isset($this->$fieldDomain) || Helper::empty($this->$fieldDomain))
+		{
+			return;
+		}
+
+		$primaryKeyName = $this->getKeyName();
+
+		if ($this->isDuplicateRecord(
+			array(
+				$fieldTitle => $this->$fieldTitle,
+				$fieldDate => $this->$fieldDate,
+				$fieldDomain => $this->$fieldDomain
+			),
+			array($primaryKeyName => $this->$primaryKeyName)
+		))
+		{
+			$fieldName = $fieldTitle . '.' . $fieldDate . '.' . $fieldDomain;
+			$this->raiseError($fieldName, 'LIB_GBJ_ERROR_UNIQUE_TITLEDATEDOMAIN');
 		}
 	}
 
